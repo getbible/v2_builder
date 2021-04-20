@@ -57,6 +57,7 @@
 	"VulgClementine" : "vulgate",
 	"Latvian" : "latvian",
 	"LtKBB" : "lithuanian",
+	"Mal1910" : "mal1910",
 	"ManxGaelic" : "manxgaelic",
 	"Maori" : "maori",
 	"BurJudson" : "judson",
@@ -79,3 +80,4 @@
 	"Uma" : "uma",
 	"Viet" : "vietnamese"
 }
+
