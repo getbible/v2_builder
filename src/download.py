@@ -2,14 +2,15 @@ import os, os.path, json, urllib, urllib.request, sys, zipfile, shutil, argparse
 
 parser = argparse.ArgumentParser()
 # get the arguments
-parser.add_argument('--output_path', help='The local path like "V2"', default="V2")
+parser.add_argument('--output_path', help='The local path like "/home/username/sword_zip"', default="sword_zip")
+parser.add_argument('--conf_dir')
 # set to args
 args = parser.parse_args()
 # this is a full path
 MAIN_PATH = args.output_path
 
 # some helper dictionaries
-v1_translation_names = json.loads(open("../conf/CrosswireModulesMap.json").read())
+v1_translation_names = json.loads(open(args.conf_dir + "/conf/CrosswireModulesMap.json").read())
 # scripts directory
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 

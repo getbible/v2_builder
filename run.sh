@@ -71,7 +71,7 @@ function getModules () {
 		sleep 1
 		echo -e "XXX\n0\nStart download of modules... \nXXX"
 		sleep 1
-		python3 -u "${DIR_src}/download.py" --output_path "${modules_path}"
+		python3 -u "${DIR_src}/download.py" --output_path "${modules_path}" --conf_dir "${DIR_conf}"
 		sleep 1
 		echo -e "XXX\n100\nDone downloading modules... \nXXX"
 		sleep 2
@@ -297,6 +297,7 @@ if (( "$SHOWCONF" == 1 )); then
 	echo "DIR_api:   ${DIR_api}"
 	echo "DIR_zip:   ${DIR_zip}"
 	echo "DIR_src:   ${DIR_src}"
+	echo "DIR_conf:  ${DIR_conf}"
 	echo "DOWNLOAD:  ${DOWNLOAD}"
 	echo "PUSH:      ${PUSH}"
 	exit
