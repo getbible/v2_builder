@@ -2,21 +2,22 @@
 
 These scripts are used to build the version 2 of the getBible API based on the Crosswire modules.
 
-## Before you continue reading the instructions, you must please agree to the following few conventions:
+## Before you continue reading the instructions...
+### You must please agree to the following few conventions:
 
-- Please run the script (as explained below) once a week to keep your repositories in sync with Crosswire Modules
-- Please do not remove the hash methods from the project as they are used to identify change for those using your scripture JSON API and HASH repositories
-- Please do not host the repository that contains all the scripture JSON on a public repository like github (unless private), since if it gets forked those downstream repository may go out of sync with any changes/fixes from the Crosswire Modules
-- Should you expose the scripture JSON API to the public (like [getBile.net](https://getbible.net/v2/translations.json) has done), please let us know by posting the details in an Issue on this repository.
+- Please run the script (as explained below) once a week to keep your repositories in sync with the Crosswire Modules.
+- Please do not remove the hash methods from the project as they are used to identify change for those using your **scripture JSON API** and **HASH** repositories.
+- Please do not host the repository that contains all the **scripture JSON** on a public repository like github (unless private), since if it gets forked those downstream repositories may go out of sync with any changes/fixes from the Crosswire Modules.
+- Should you expose the **scripture JSON API** to the public (like [getBible.net](https://getbible.net/v2/translations.json) has done), please let us know by posting the details in an Issue on this repository.
 - Should you not be able to do (or continue doing) any of the above requests then please do not place any of the project produced JSON or HASH files in the public space or in any project.
 
 > You can still just use https://github.com/getbible/v2 directly and do not need to run your own API.
 
 ### You may ask Why?
 
-Well, because we at getBible would like to comply with the Crosswire conventions to remain in sync with their modules all the way downstream from our project. Those who do not honor these agreements are responsible for Scripture Text (Digital) being incorrectly distributed with errors, as the digital versions of these Bibles may contain spelling mistakes, typos, or other errors like missing verses or chapters. So as they are discovered and fixed, Crosswire releases updates to their modules, and our commitments to the above agreed conventions ensure that these updates flow downstream. Should you have any further questions please do not hesitate to open an issue on this repository. Honestly without these measures there is no getBible project... it is that serious.
+Well, because we at getBible would like to comply with the Crosswire conventions to remain in sync with their modules all the way downstream from our project. Those who do not honor these agreements are responsible for Scripture Text (Digital) being incorrectly distributed with errors, as the digital versions of these Bibles may contain spelling mistakes, typos, or other errors like missing verses or chapters. So as they are discovered and fixed, Crosswire releases updates to their modules, and our commitment to the above agreed conventions ensure that these updates flow downstream. Should you have any further questions please do not hesitate to open an issue on this repository. Honestly, without these measures there is no getBible project... it is that serious.
 
-**We made this code public so those who use our [API](https://github.com/getbible/v2) can see how it is build, and help improve and guide the projects code and future.**
+**We made this code public so those who use our [API](https://github.com/getbible/v2) can see how it is build, and help improve and guide the project's code and future.**
 
 # Okay, Lets get started...
 
