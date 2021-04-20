@@ -18,11 +18,12 @@ parser.add_argument('--output_path')
 parser.add_argument('--counter')
 parser.add_argument('--next')
 parser.add_argument('--conf_dir')
+parser.add_argument('--bible_conf')
 # set to args
 args = parser.parse_args()
 
 # some helper dictionaries
-v1_translation_names = json.loads(open(args.conf_dir + "/CrosswireModulesMap.json").read())
+v1_translation_names = json.loads(open(args.bible_conf).read())
 v1_translations = json.loads(open(args.conf_dir + "/v1Translations.json").read())
 book_numbers = json.loads(open(args.conf_dir + "/bookNumbers.json").read())
 book_names = json.loads(open(args.conf_dir + "/bookNames.json").read())

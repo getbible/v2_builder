@@ -1,18 +1,40 @@
 #! /bin/bash
 
 # Do some prep work
-command -v jq >/dev/null 2>&1 || { echo >&2 "We require jq for this script to run, but it's not installed.  Aborting."; exit 1; }
-command -v sha1sum >/dev/null 2>&1 || { echo >&2 "We require sha1sum for this script to run, but it's not installed.  Aborting."; exit 1; }
-command -v git >/dev/null 2>&1 || { echo >&2 "We require git for this script to run, but it's not installed.  Aborting."; exit 1; }
-command -v whiptail >/dev/null 2>&1 || { echo >&2 "We require whiptail for this script to run, but it's not installed.  Aborting."; exit 1; }
-command -v python3 >/dev/null 2>&1 || { echo >&2 "We require python3 for this script to run, but it's not installed.  Aborting."; exit 1; }
+command -v jq >/dev/null 2>&1 || {
+	echo >&2 "We require jq for this script to run, but it's not installed.  Aborting."
+	exit 1
+}
+command -v sha1sum >/dev/null 2>&1 || {
+	echo >&2 "We require sha1sum for this script to run, but it's not installed.  Aborting."
+	exit 1
+}
+command -v git >/dev/null 2>&1 || {
+	echo >&2 "We require git for this script to run, but it's not installed.  Aborting."
+	exit 1
+}
+command -v whiptail >/dev/null 2>&1 || {
+	echo >&2 "We require whiptail for this script to run, but it's not installed.  Aborting."
+	exit 1
+}
+command -v python3 >/dev/null 2>&1 || {
+	echo >&2 "We require python3 for this script to run, but it's not installed.  Aborting."
+	exit 1
+}
 
-# main function
-function main () {
-	# main project Header
-	header_string="getBible JSON API.v2"
-	# remove and re-download Crosswire modules
-	if (( "$DOWNLOAD" == 1 )); then
+# main project Header
+HEADERTITLE="getBible JSON API.v2"
+
+# main function ˘Ô≈ôﺣ
+function main() {
+	# Only Hash existing scripture JSON files
+	if (("$HASHONLY" == 1)); then
+		# the hashing of all files
+		hashingAll
+		exit
+	fi
+	# download Crosswire modules
+	if (("$DOWNLOAD" == 1)); then
 		getModules "${DIR_zip}"
 	fi
 	# prep the Scripture Main Git Folder
@@ -21,49 +43,29 @@ function main () {
 	number=$(ls "${DIR_zip}" | wc -l)
 	each_count=$((98 / $number))
 	# Build Static JSON Files
-	setStaticJsonFiles "${DIR_api}_scripture" "${DIR_zip}" "$number" "$each_count" "$header_string"
+	setStaticJsonFiles "${DIR_api}_scripture" "${DIR_zip}" "$number" "$each_count"
 	# Remove Empty Folder & Static Files
 	cleanSystem "${DIR_api}_scripture"
-	# start hashing Translations
-	hashingMethod "${DIR_api}_scripture" \
-		"hash_versions" \
-		"Hash Versions | ${header_string}" \
-		"Start Versions Hashing" \
-		"Done Hashing Versions" \
-		"Please wait while we hash all versions"
-	# start hashing Translations Books
-	hashingMethod "${DIR_api}_scripture" \
-		"hash_books" \
-		"Hash Books | ${header_string}" \
-		"Start Versions Books Hashing" \
-		"Done Hashing All Versions Books" \
-		"Please wait while we hash all versions books"
-	# start hashing Translations Books Chapters
-	hashingMethod "${DIR_api}_scripture" \
-		"hash_chapters" \
-		"Hash Chapters | ${header_string}" \
-		"Start Versions Books Chapters Hashing" \
-		"Done Hashing All Versions Books Chapters" \
-		"Please wait while we hash all versions books chapters"
-	# moving all public hash files into place
-	hashingMethod "${DIR_api}" \
-		"movePublicHashFiles" \
-		"Moving Public Hash | ${header_string}" \
-		"Start Moving Public Hashes" \
-		"Done Moving All Public Hashes" \
-		"Please wait while we move all the public hashes into place"
+	# the hashing of all files
+	hashingAll
 	# finally check if we must commit and push changes
-	if (( "$PUSH" == 1 )); then
+	if (("$PUSH" == 1)); then
 		"${DIR_src}/moveToGithub.sh" "${DIR_api}"
 	fi
 }
 
-# remove and re-download Crosswire modules
-function getModules () {
+# manage messages
+function messagesOut() {
+	if (("$QUIET" == 0)); then
+		whiptail --title "$1" --gauge "$2" 7 77 0
+	fi
+}
+
+# download Crosswire modules
+function getModules() {
 	# set local values
 	local modules_path="$1"
-	local header_string="$2"
-	# we first delete the old models
+	# we first delete the old modules
 	rm -fr $modules_path
 	mkdir -p $modules_path
 	# then we get the current modules
@@ -71,15 +73,17 @@ function getModules () {
 		sleep 1
 		echo -e "XXX\n0\nStart download of modules... \nXXX"
 		sleep 1
-		python3 -u "${DIR_src}/download.py" --output_path "${modules_path}" --conf_dir "${DIR_conf}"
+		python3 -u "${DIR_src}/download.py" \
+			--output_path "${modules_path}" \
+			--bible_conf "${DIR_bible}"
 		sleep 1
 		echo -e "XXX\n100\nDone downloading modules... \nXXX"
 		sleep 2
-	} | whiptail --title "Get Crosswire Modules | ${header_string}" --gauge "Please wait while we download all modules" 7 77 0
+	} | messagesOut "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
 }
 
 # prep the Scripture Main Git Folder
-function prepScriptureMainGit () {
+function prepScriptureMainGit() {
 	# set local values
 	local scripture_path="$1"
 	# if git folder does not exist clone it
@@ -100,14 +104,13 @@ function prepScriptureMainGit () {
 }
 
 # Build Static JSON Files
-function setStaticJsonFiles () {
+function setStaticJsonFiles() {
 	# set local values
 	local scripture_path="$1"
 	local modules_path="$2"
 	local counter="$3"
 	local each_count="$4"
-	local header_string="$5"
-	# whiptail messaging
+	# build the files
 	{
 		sleep 1
 		echo -e "XXX\n0\nStart Building... \nXXX"
@@ -118,7 +121,12 @@ function setStaticJsonFiles () {
 			# add more
 			next=$(($each_count + $counter))
 			# run script
-			python3 -u "${DIR_src}/sword_to_json.py" --source_file "${filename}" --output_path "${scripture_path}" --counter "${counter}" --next "${next}" --conf_dir "${DIR_conf}"
+			python3 -u "${DIR_src}/sword_to_json.py" \
+				--source_file "${filename}" \
+				--output_path "${scripture_path}" \
+				--counter "${counter}" --next "${next}" \
+				--conf_dir "${DIR_conf}" \
+				--bible_conf "${DIR_bible}"
 			# add more
 			counter=$(($each_count + $counter))
 			# give notice
@@ -127,11 +135,11 @@ function setStaticJsonFiles () {
 		done
 		echo -e "XXX\n100\nDone Building... \nXXX"
 		sleep 1
-	} | whiptail --title "Build Static JSON Files | ${header_string}" --gauge "Please wait while build the static json API" 7 77 0
+	} | messagesOut "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
 }
 
 # Remove Empty Folder & Static Files
-function cleanSystem () {
+function cleanSystem() {
 	# set local values
 	local scripture_path="$1"
 	# remove all empty files
@@ -140,8 +148,40 @@ function cleanSystem () {
 	find "${scripture_path}" -type d -empty -delete
 }
 
+# the hashing of all files
+function hashingAll() {
+	# start hashing Translations
+	hashingMethod "${DIR_api}_scripture" \
+		"hash_versions" \
+		"Hash Versions" \
+		"Start Versions Hashing" \
+		"Done Hashing Versions" \
+		"Please wait while we hash all versions"
+	# start hashing Translations Books
+	hashingMethod "${DIR_api}_scripture" \
+		"hash_books" \
+		"Hash Books" \
+		"Start Versions Books Hashing" \
+		"Done Hashing All Versions Books" \
+		"Please wait while we hash all versions books"
+	# start hashing Translations Books Chapters
+	hashingMethod "${DIR_api}_scripture" \
+		"hash_chapters" \
+		"Hash Chapters" \
+		"Start Versions Books Chapters Hashing" \
+		"Done Hashing All Versions Books Chapters" \
+		"Please wait while we hash all versions books chapters"
+	# moving all public hash files into place
+	hashingMethod "${DIR_api}" \
+		"movePublicHashFiles" \
+		"Moving Public Hash" \
+		"Start Moving Public Hashes" \
+		"Done Moving All Public Hashes" \
+		"Please wait while we move all the public hashes into place"
+}
+
 # hashing all files in the project
-function hashingMethod () {
+function hashingMethod() {
 	# set local values
 	local scripture_path="$1"
 	local script_name="$2"
@@ -158,25 +198,24 @@ function hashingMethod () {
 		sleep 1
 		echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 		sleep 1
-	} | whiptail --title "$w_title" --gauge "$w_initial_ms" 7 77 0
+	} | messagesOut "$w_title | ${HEADERTITLE}" "$w_initial_ms"
 }
 
-# help message
-function show_help () {
-cat << EOF
+# help message ʕ•ᴥ•ʔ
+function show_help() {
+	cat <<EOF
 Usage: ${0##*/:-} [OPTION...]
 
 You are able to change a few default behaviours in the getBible API builder
   ------ Passing no command options will fallback on the defaults -------
 
-	Options
+	Options  ᒡ◯ᵔ◯ᒢ
 	======================================================
-   -a|--api
+   --api=<path>
 	set the API target folders full path
 		- target folders will be created using this path
 
-	example: ${0##*/:-} -a /home/username/v2
-	example: ${0##*/:-} --api /home/username/v2
+	example: ${0##*/:-} --api=/home/username/v2
 
 	two folders will be created:
 		- /home/username/v2
@@ -188,30 +227,56 @@ You are able to change a few default behaviours in the getBible API builder
 
 	(these are the target folders)
 	======================================================
-   -p|--push
+   --bconf=<path>
+	set the path to the Bible config file
+		- This file contains the list of Crosswire
+		  Bible Modules that will be used to build
+		  the JSON API files
+
+	example: ${0##*/:-} --bconf=/home/username/bibles.json
+
+	defaults:
+		- repo/conf/CrosswireModulesMap.json
+	======================================================
+   --push
 	push changes to github (only if there are changes)
 		- setup the target folders (see target folders)
 		- linked them to github (your own repos)
 		- must be able to push (ssh authentication needed)
-		
+
 	REMEMBER THE AGREEMENT (README.md)
 
-	example: ${0##*/:-} -p
 	example: ${0##*/:-} --push
 	======================================================
-   -z|--zip
+   --zip=<path>
 	set the ZIP target folder full path for the Crosswire Modules
 
-	example: ${0##*/:-} -z /home/username/sword_zip 
-	example: ${0##*/:-} --zip /home/username/sword_zip
+	example: ${0##*/:-} --zip=/home/username/sword_zip
 
 	defaults:
 		- repo/sword_zip
 	======================================================
    -d
 	Do not download all Crosswire Modules (helpful in testing)
+	Only use this if you already have modules.
 
 	example: ${0##*/:-} -d
+	======================================================
+   --hashonly
+	To only hash the existing JSON scripture files
+
+	example: ${0##*/:-} --hashonly
+	======================================================
+   --dry
+	To show all defaults, and not run the build
+
+	example: ${0##*/:-} --dry
+	======================================================
+   -q|--quiet
+	Quiet mode that prevent whiptail from showing progress
+
+	example: ${0##*/:-} -q
+	example: ${0##*/:-} --quiet
 	======================================================
    -h|--help
 	display this help menu
@@ -219,90 +284,123 @@ You are able to change a few default behaviours in the getBible API builder
 	example: ${0##*/:-} -h
 	example: ${0##*/:-} --help
 	======================================================
-                            getBible.net
+			${HEADERTITLE}
 	======================================================
 EOF
 }
 
 # get script path
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # set working paths
 DIR_src="${DIR}/src"
 DIR_conf="${DIR}/conf"
 DIR_api="${DIR}/v2"
 DIR_zip="${DIR}/sword_zip"
+# set Bible config file path
+DIR_bible="${DIR_conf}/CrosswireModulesMap.json"
 # download all modules
 DOWNLOAD=1
 # push changes to github (you need setup your own repos)
 PUSH=0
 # show values do not run
-SHOWCONF=0
+DRYRUN=0
+# only hash the scriptures
+HASHONLY=0
+# kill all messages
+QUIET=0
 
 # check if we have options
 while :; do
 	case $1 in
-		-h|--help)
-			show_help # Display a usage synopsis.
-			exit
-			;;
-		-d)
-			DOWNLOAD=0
-			;;
-		--show)
-			SHOWCONF=1
-			;;
-		-p|--push)
-			PUSH=1
-			;;
-		-a|--api) # Takes an option argument; ensure it has been specified.
-			if [ "$2" ]; then
-				DIR_api=$2
-				shift
-			else
-				echo 'ERROR: "--api" requires a non-empty option argument.'
-				exit 1
-			fi
-			;;
-		--api=?*)
-			DIR_api=${1#*=} # Delete everything up to "=" and assign the remainder.
-			;;
-		--api=) # Handle the case of an empty --api=
+	-h | --help)
+		show_help # Display a usage synopsis.
+		exit
+		;;
+	-q | --quiet)
+		QUIET=1
+		;;
+	-d)
+		DOWNLOAD=0
+		;;
+	--hashonly)
+		HASHONLY=1
+		;;
+	--dry)
+		DRYRUN=1
+		;;
+	--push)
+		PUSH=1
+		;;
+	--bconf) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			DIR_bible=$2
+			shift
+		else
+			echo 'ERROR: "--bconf" requires a non-empty option argument.'
+			exit 1
+		fi
+		;;
+	--bconf=?*)
+		DIR_bible=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--bconf=) # Handle the case of an empty --bconf=
+		echo 'ERROR: "--bconf" requires a non-empty option argument.'
+		exit 1
+		;;
+	--api) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			DIR_api=$2
+			shift
+		else
 			echo 'ERROR: "--api" requires a non-empty option argument.'
 			exit 1
-			;;
-		-z|--zip) # Takes an option argument; ensure it has been specified.
-			if [ "$2" ]; then
-				DIR_zip=$2
-				shift
-			else
-				echo 'ERROR: "--zip" requires a non-empty option argument.'
-				exit 1
-			fi
-			;;
-		--zip=?*)
-			DIR_zip=${1#*=} # Delete everything up to "=" and assign the remainder.
-			;;
-		--zip=) # Handle the case of an empty --zip=
+		fi
+		;;
+	--api=?*)
+		DIR_api=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--api=) # Handle the case of an empty --api=
+		echo 'ERROR: "--api" requires a non-empty option argument.'
+		exit 1
+		;;
+	--zip) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			DIR_zip=$2
+			shift
+		else
 			echo 'ERROR: "--zip" requires a non-empty option argument.'
 			exit 1
-			;;
-		*) # Default case: No more options, so break out of the loop.
-			break
+		fi
+		;;
+	--zip=?*)
+		DIR_zip=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--zip=) # Handle the case of an empty --zip=
+		echo 'ERROR: "--zip" requires a non-empty option argument.'
+		exit 1
+		;;
+	*) # Default case: No more options, so break out of the loop.
+		break ;;
 	esac
 	shift
 done
 
-# show the config values
-if (( "$SHOWCONF" == 1 )); then
+# show the config values ¯\_(ツ)_/¯
+if (("$DRYRUN" == 1)); then
+	echo "		${HEADERTITLE}"
+	echo "======================================================"
 	echo "DIR_api:   ${DIR_api}"
 	echo "DIR_zip:   ${DIR_zip}"
 	echo "DIR_src:   ${DIR_src}"
 	echo "DIR_conf:  ${DIR_conf}"
+	echo "DIR_bible: ${DIR_bible}"
+	echo "QUIET:     ${QUIET}"
+	echo "HASHONLY:  ${HASHONLY}"
 	echo "DOWNLOAD:  ${DOWNLOAD}"
 	echo "PUSH:      ${PUSH}"
+	echo "======================================================"
 	exit
 fi
 
-# run Main ;)
+# run Main ┬┴┬┴┤(･_├┬┴┬┴
 main
-

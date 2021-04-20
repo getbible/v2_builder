@@ -19,9 +19,9 @@ Well, because we at getBible would like to comply with the Crosswire conventions
 
 **We made this code public so those who use our [API](https://github.com/getbible/v2) can see how it is build, and help improve and guide the project's code and future.**
 
-# Okay, Lets get started...
+# Okay, Lets get started... ˘Ô≈ôﺣ
 
-Should you like to contribute any improvements either in code or conduct, just open an issue as the first step, and beginning of the conversation.
+Should you like to contribute any improvements either in code or conduct, just open an issue as the first step, and beginning of the conversation. ツ
 
 ## Install Dependencies (only Ubuntu 20 *tested)
 
@@ -69,14 +69,13 @@ Usage: ./run.sh [OPTION...]
 You are able to change a few default behaviours in the getBible API builder
   ------ Passing no command options will fallback on the defaults -------
 
-	Options
+	Options  ᒡ◯ᵔ◯ᒢ
 	======================================================
-   -a|--api
+   --api=<path>
 	set the API target folders full path
 		- target folders will be created using this path
 
-	example: ./run.sh -a /home/username/v2
-	example: ./run.sh --api /home/username/v2
+	example: ./run.sh --api=/home/username/v2
 
 	two folders will be created:
 		- /home/username/v2
@@ -88,30 +87,56 @@ You are able to change a few default behaviours in the getBible API builder
 
 	(these are the target folders)
 	======================================================
-   -p|--push
+   --bconf=<path>
+	set the path to the Bible config file
+		- This file contains the list of Crosswire
+		  Bible Modules that will be used to build
+		  the JSON API files
+
+	example: ./run.sh --bconf=/home/username/bibles.json
+
+	defaults:
+		- repo/conf/CrosswireModulesMap.json
+	======================================================
+   --push
 	push changes to github (only if there are changes)
 		- setup the target folders (see target folders)
 		- linked them to github (your own repos)
 		- must be able to push (ssh authentication needed)
-		
+
 	REMEMBER THE AGREEMENT (README.md)
 
-	example: ./run.sh -p
 	example: ./run.sh --push
 	======================================================
-   -z|--zip
+   --zip=<path>
 	set the ZIP target folder full path for the Crosswire Modules
 
-	example: ./run.sh -z /home/username/sword_zip 
-	example: ./run.sh --zip /home/username/sword_zip
+	example: ./run.sh --zip=/home/username/sword_zip
 
 	defaults:
 		- repo/sword_zip
 	======================================================
    -d
 	Do not download all Crosswire Modules (helpful in testing)
+	Only use this if you already have modules.
 
 	example: ./run.sh -d
+	======================================================
+   --hashonly
+	To only hash the existing JSON scripture files
+
+	example: ./run.sh --hashonly
+	======================================================
+   --dry
+	To show all defaults, and not run the build
+
+	example: ./run.sh --dry
+	======================================================
+   -q|--quiet
+	Quiet mode that prevent whiptail from showing progress
+
+	example: ./run.sh -q
+	example: ./run.sh --quiet
 	======================================================
    -h|--help
 	display this help menu
@@ -119,7 +144,7 @@ You are able to change a few default behaviours in the getBible API builder
 	example: ./run.sh -h
 	example: ./run.sh --help
 	======================================================
-                            getBible.net
+			getBible JSON API.v2
 	======================================================
 ```
 

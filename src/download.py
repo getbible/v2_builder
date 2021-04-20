@@ -3,14 +3,14 @@ import os, os.path, json, urllib, urllib.request, sys, zipfile, shutil, argparse
 parser = argparse.ArgumentParser()
 # get the arguments
 parser.add_argument('--output_path', help='The local path like "/home/username/sword_zip"', default="sword_zip")
-parser.add_argument('--conf_dir')
+parser.add_argument('--bible_conf')
 # set to args
 args = parser.parse_args()
 # this is a full path
 MAIN_PATH = args.output_path
 
 # some helper dictionaries
-v1_translation_names = json.loads(open(args.conf_dir + "/CrosswireModulesMap.json").read())
+v1_translation_names = json.loads(open(args.bible_conf).read())
 # scripts directory
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
