@@ -10,7 +10,7 @@ args = parser.parse_args()
 MAIN_PATH = args.output_path
 
 # some helper dictionaries
-v1_translation_names = json.loads(open(args.conf_dir + "/conf/CrosswireModulesMap.json").read())
+v1_translation_names = json.loads(open(args.conf_dir + "/CrosswireModulesMap.json").read())
 # scripts directory
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
