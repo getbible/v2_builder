@@ -1,36 +1,144 @@
-## SWORD to JSON – Generate json files of many Bible versions
+# V2 API Builder
 
-The [SWORD project provides modules](http://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles) freely for many different Bibles in many different languages. Often, Bible versions are provided in ways that are not convenient for developers to access. [pysword](https://pypi.python.org/pypi/pysword/0.2.3) is a Python package that provides an easy way to read the Bible modules from SWORD as part of your Python program.
+These scripts are used to build the version 2 of the getBible API based on the Crosswire modules.
 
-This project leverages pysword to generate a json file from a SWORD module. As Bible translations are available in dozens of languages, this provides an easy way to generate a json version of many different Bible versions. An example is included in the project of the public domain KJV version in `kjv.json`.
+## Before you continue reading the instructions, you must please agree to the following few conventions:
 
-As an example, here is the first part of the Bible so that you can see how the file is formatted.
+- Please run the script (as explained below) once a week to keep your repositories in sync with Crosswire Modules
+- Please do not remove the hash methods from the project as they are used to identify change for those using your scripture JSON API and HASH repositories
+- Please do not host the repository that contains all the scripture JSON on a public repository like github (unless private), since if it gets forked those downstream repository may go out of sync with any changes/fixes from the Crosswire Modules
+- Should you expose the scripture JSON API to the public (like [getBile.net](https://getbible.net/v2/translations.json) has done), please let us know by posting the details in an Issue on this repository.
+- Should you not be able to do (or continue doing) any of the above requests then please do not place any of the project produced JSON or HASH files in the public space or in any project.
+
+> You can still just use https://github.com/getbible/v2 directly and do not need to run your own API.
+
+### You may ask Why?
+
+Well, because we at getBible would like to comply with the Crosswire conventions to remain in sync with their modules all the way downstream from our project. Those who do not honor these agreements are responsible for Scripture Text (Digital) being incorrectly distributed with errors, as the digital versions of these Bibles may contain spelling mistakes, typos, or other errors like missing verses or chapters. So as they are discovered and fixed, Crosswire releases updates to their modules, and our commitments to the above agreed conventions ensure that these updates flow downstream. Should you have any further questions please do not hesitate to open an issue on this repository. Honestly without these measures there is no getBible project... it is that serious.
+
+**We made this code public so those who use our [API](https://github.com/getbible/v2) can see how it is build, and help improve and guide the projects code and future.**
+
+# Okay, Lets get started...
+
+Should you like to contribute any improvements either in code or conduct, just open an issue as the first step, and beginning of the conversation.
+
+## Install Dependencies (only Ubuntu 20 *tested)
+
+Install Python3.8+
+```bash 
+$ sudo apt-get update
+$ sudo apt-get install python3.8 python3-pip
 ```
-{
-    "books": [
-        {
-            "name": "Genesis",
-            "chapters": [
-                {
-                    "chapter": 1,
-                    "verses": [
-                        {
-                            "chapter": 1,
-                            "text": "In the beginning God created the heaven and the earth.",
-                            "verse": 1,
-                            "name": "Genesis 1:1"
-                        },
+> make sure the [python3 version is 3.8](https://askubuntu.com/a/892322/379265) or higher so that the JSON order remains the same as found on [our API](https://github.com/getbible/v2), else your hash values will not be the same.
+
+Install [pysword](https://gitlab.com/tgc-dk/pysword) (A native Python reader of the SWORD Project Bible Modules)
+```bash
+$ sudo pip3 install pysword
 ```
 
-### How to generate
-Currently, due to pysword limitations, only Bible modules are supported, not dictionaries and commentaries. Additionally, this project only supports generating a json file that contains all of the text of the Old and New Testaments of a given Bible module.
+## Setup the Builder
 
-First, you will need to install pysword. This can be done using pip: `pip install pysword`
+Clone this repository
+```bash
+$ git clone https://github.com/getbible/v2_builder.git
+$ cd v2_builder/
+```
 
-Next, you can run using this format: `python sword_to_json.py --source_file KJV.zip --bible_version KJV --output_file new.json`
+## Run the Builder
 
-* _source_file_ – Location of the zipped module you are trying to read. You can pass the filename if you're in the same directory or you can also pass a relative or absolute folder path.
-* _bible_version_ – Name of the module you are trying to load, as a SWORD module can include more than one Bible version. If you get the module from the [SWORD project's index](http://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles), the **Name** column has what you can pass in here.
-* _output_file_ – Location of the json file to be written to disk. As with the source file, you can pass the filename if you're in the same directory or you can also pass a relative or absolute folder path.
+Make sure that the following files are executable.
+```bash
+$ sudo chmod +x run.sh
+$ sudo chmod +x src/hash_books.sh
+$ sudo chmod +x src/hash_chapters.sh
+$ sudo chmod +x src/hash_versions.sh
+$ sudo chmod +x src/movePublicFiles.sh
+$ sudo chmod +x src/moveToGithub.sh
+```
 
-Note: It can take up to a few minutes to generate the json for any given Bible version. It takes approximately one minute to run on my machine.
+Start the Building process (this will take long)
+```bash
+$ ./run.sh
+```
+
+### Help Menu
+```txt
+Usage: ./run.sh [OPTION...]
+
+You are able to change a few default behaviours in the getBible API builder
+  ------ Passing no command options will fallback on the defaults -------
+
+	Options
+	======================================================
+   -a|--api
+	set the API target folders full path
+		- target folders will be created using this path
+
+	example: ./run.sh -a /home/username/v2
+	example: ./run.sh --api /home/username/v2
+
+	two folders will be created:
+		- /home/username/v2
+		- /home/username/v2_scripture
+
+	defaults:
+		- repo/v2
+		- repo/v2_scripture
+
+	(these are the target folders)
+	======================================================
+   -p|--push
+	push changes to github (only if there are changes)
+		- setup the target folders (see target folders)
+		- linked them to github (your own repos)
+		- must be able to push (ssh authentication needed)
+		
+	REMEMBER THE AGREEMENT (README.md)
+
+	example: ./run.sh -p
+	example: ./run.sh --push
+	======================================================
+   -z|--zip
+	set the ZIP target folder full path for the Crosswire Modules
+
+	example: ./run.sh -z /home/username/sword_zip 
+	example: ./run.sh --zip /home/username/sword_zip
+
+	defaults:
+		- repo/sword_zip
+	======================================================
+   -d
+	Do not download all Crosswire Modules (helpful in testing)
+
+	example: ./run.sh -d
+	======================================================
+   -h|--help
+	display this help menu
+
+	example: ./run.sh -h
+	example: ./run.sh --help
+	======================================================
+                            getBible.net
+	======================================================
+```
+
+### Setup Cron Job
+
+To run this in a crontab
+```bash
+$ crontab -e
+```
+Then add the following line, update the time as needed
+```bash
+10 5 * * MON /home/username/v2_builder/run.sh >> /home/username/v2_builder/builder.log 2>&1
+```
+
+# Don't Forget Our Agreement!
+
+### Free Software (with responsibility)
+```txt
+Llewellyn van der Merwe <github@vdm.io>
+Copyright (C) 2019. All Rights Reserved
+GNU/GPL Version 2 or later - http://www.gnu.org/licenses/gpl-2.0.html
+```
+
