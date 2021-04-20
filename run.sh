@@ -229,8 +229,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # set working paths
 DIR_src="${DIR}/src"
 DIR_conf="${DIR}/conf"
-DIR_api="${DIR}/sword_zip"
-DIR_zip="${DIR}/v2"
+DIR_api="${DIR}/v2"
+DIR_zip="${DIR}/sword_zip"
 # download all modules
 DOWNLOAD=1
 # push changes to github (you need setup your own repos)
