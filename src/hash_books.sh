@@ -20,6 +20,7 @@ fi
 target_folder="$1"
 # tracker counter
 counter=0
+each="${2:-1}"
 
 # check if the folder exist
 if [ ! -d $target_folder ]; then
@@ -120,8 +121,9 @@ for filename in $target_folder/*.json; do
 			counter=70
 		fi
 		# add more
-		counter=$((counter + 1))
+		counter=$((counter + each))
 		# give notice
 		echo -e "XXX\n${counter}\nDone Hashing $abbreviation books\nXXX"
+		sleep 1
 	fi
 done

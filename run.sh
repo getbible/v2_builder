@@ -33,8 +33,11 @@ HEADERTITLE="getBible JSON API.v2"
 function main() {
 	# Only Hash existing scripture JSON files
 	if (("$HASHONLY" == 1)); then
+		# numbers
+		number=$(ls "${DIR_zip}" | wc -l)
+		each_count=$((98 / number))
 		# the hashing of all files
-		hashingAll
+		hashingAll "${each_count:-1}"
 		# show completion message
 		completedBuildMessage
 		exit
@@ -43,17 +46,17 @@ function main() {
 	if (("$DOWNLOAD" == 1)); then
 		getModules "${DIR_zip}"
 	fi
-	# prep the Scripture Main Git Folder
-	prepScriptureMainGit "${DIR_api}_scripture"
 	# numbers
 	number=$(ls "${DIR_zip}" | wc -l)
-	each_count=$((98 / $number))
+	each_count=$((98 / number))
+	# prep the Scripture Main Git Folder
+	prepScriptureMainGit "${DIR_api}_scripture"
 	# Build Static JSON Files
-	setStaticJsonFiles "${DIR_api}_scripture" "${DIR_zip}" "$number" "$each_count"
+	setStaticJsonFiles "${DIR_api}_scripture" "${DIR_zip}" "${each_count:-1}"
 	# Remove Empty Folder & Static Files
 	cleanSystem "${DIR_api}_scripture"
 	# the hashing of all files
-	hashingAll
+	hashingAll "${each_count:-1}"
 	# finally check if we must commit and push changes
 	if (("$PUSH" == 1)); then
 		"${DIR_src}/moveToGithub.sh" "${DIR_api}"
@@ -82,7 +85,7 @@ function completedBuildMessage() {
 # show the progress of all tasks
 function showProgress() {
 	if (("$QUIET" == 0)); then
-		# little neardy  ᒡ◯ᵔ◯ᒢ
+		# little nerdy  ᒡ◯ᵔ◯ᒢ
 		whiptail --title "$1" --gauge "$2" 7 77 0
 	else
 		# looking for a better solution... ¯\_(ツ)_/¯
@@ -95,8 +98,8 @@ function getModules() {
 	# set local values
 	local modules_path="$1"
 	# we first delete the old modules
-	rm -fr $modules_path
-	mkdir -p $modules_path
+	rm -fr "${modules_path}"
+	mkdir -p "${modules_path}"
 	# then we get the current modules
 	{
 		sleep 1
@@ -116,18 +119,18 @@ function prepScriptureMainGit() {
 	# set local values
 	local scripture_path="$1"
 	# if git folder does not exist clone it
-	if [ ! -d "$scripture_path" ]; then
+	if [ ! -d "${scripture_path}" ]; then
 		# create the git folder (for scripture)
-		mkdir -p "$scripture_path"
+		mkdir -p "${scripture_path}"
 	fi
 	# reset the git folder on each run
-	if [ -d "$scripture_path/.git" ]; then
+	if [ -d "${scripture_path}/.git" ]; then
 		mkdir -p "${scripture_path}Tmp"
 		mv -f "${scripture_path}/.git" "${scripture_path}Tmp"
 		mv -f "${scripture_path}/.gitignore" "${scripture_path}Tmp"
 
 		# now we remove all the old git files (so we start clean each time in the build)
-		rm -fr $scripture_path
+		rm -fr "${scripture_path}"
 		mv -f "${scripture_path}Tmp" "${scripture_path}"
 	fi
 }
@@ -137,8 +140,8 @@ function setStaticJsonFiles() {
 	# set local values
 	local scripture_path="$1"
 	local modules_path="$2"
-	local counter="$3"
-	local each_count="$4"
+	local each="$3"
+	local counter=0
 	# build the files
 	{
 		sleep 1
@@ -148,16 +151,16 @@ function setStaticJsonFiles() {
 			# give notice
 			echo -e "XXX\n${counter}\nBuilding ${filename} static json files...\nXXX"
 			# add more
-			next=$(($each_count + $counter))
+			next=$((counter + each))
 			# run script
 			python3 -u "${DIR_src}/sword_to_json.py" \
 				--source_file "${filename}" \
 				--output_path "${scripture_path}" \
-				--counter "${counter}" --next "${next}" \
+				--counter "$counter" --next "$next" \
 				--conf_dir "${DIR_conf}" \
 				--bible_conf "${DIR_bible}"
 			# add more
-			counter=$(($each_count + $counter))
+			counter="$next"
 			# give notice
 			echo -e "XXX\n${counter}\nDone building ${filename} static json files...\nXXX"
 			sleep 1
@@ -179,34 +182,36 @@ function cleanSystem() {
 
 # the hashing of all files
 function hashingAll() {
+	# set local values
+	local each="$1"
 	# start hashing Translations
 	hashingMethod "${DIR_api}_scripture" \
 		"hash_versions" \
 		"Hash Versions" \
 		"Start Versions Hashing" \
 		"Done Hashing Versions" \
-		"Please wait while we hash all versions"
+		"Please wait while we hash all versions" "$each"
 	# start hashing Translations Books
 	hashingMethod "${DIR_api}_scripture" \
 		"hash_books" \
 		"Hash Books" \
 		"Start Versions Books Hashing" \
 		"Done Hashing All Versions Books" \
-		"Please wait while we hash all versions books"
+		"Please wait while we hash all versions books" "$each"
 	# start hashing Translations Books Chapters
 	hashingMethod "${DIR_api}_scripture" \
 		"hash_chapters" \
 		"Hash Chapters" \
 		"Start Versions Books Chapters Hashing" \
 		"Done Hashing All Versions Books Chapters" \
-		"Please wait while we hash all versions books chapters"
+		"Please wait while we hash all versions books chapters" "$each"
 	# moving all public hash files into place
 	hashingMethod "${DIR_api}" \
 		"movePublicHashFiles" \
 		"Moving Public Hash" \
 		"Start Moving Public Hashes" \
 		"Done Moving All Public Hashes" \
-		"Please wait while we move all the public hashes into place"
+		"Please wait while we move all the public hashes into place" "$each"
 }
 
 # hashing all files in the project
@@ -218,12 +223,13 @@ function hashingMethod() {
 	local w_start_ms="$4"
 	local w_end_ms="$5"
 	local w_initial_ms="$6"
+	local each="$7"
 	# now run the hashing
 	{
 		sleep 1
 		echo -e "XXX\n0\n${w_start_ms}... \nXXX"
 		sleep 1
-		. "${DIR_src}/${script_name}.sh" "${scripture_path}"
+		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each"
 		sleep 1
 		echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 		sleep 1

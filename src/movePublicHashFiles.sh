@@ -1,14 +1,14 @@
 #! /bin/bash
 
 # make sure we have at least one argument
-if [ $# -eq 0 ]
-  then
-    echo >&2 "Target folder must be supplied. Aborting."
-    exit 1;
+if [ $# -eq 0 ]; then
+	echo >&2 "Target folder must be supplied. Aborting."
+	exit 1
 fi
 
 # target folder
 API_path="$1"
+each="${2:-1}"
 
 scripture_path="${API_path}_scripture"
 hash_path="${API_path}"
@@ -35,10 +35,9 @@ fi
 declare -a arr=('*.sha' 'checksum' 'checksum.json' 'translations' 'translations.json' 'books' 'books.json' 'chapters' 'chapters.json')
 
 ## now loop through the above array
-for key in "${arr[@]}"
-do
+for key in "${arr[@]}"; do
 	# give notice
-	counter=0
+	counter="$each"
 	echo -e "XXX\n$counter\nMoving all these type ($key) of files\nXXX"
 	sleep 1
 	find "$scripture_path" -type f -name "$key" -print0 | while IFS= read -r -d '' file; do
@@ -50,14 +49,12 @@ do
 		# copy the files there
 		cp --remove-destination "$file" "$newFile"
 		# check if we have counter up-to total
-		if (("$counter" >= 98))
-		then
-			counter=3
+		if (("$counter" >= 98)); then
+			counter="$each"
 		fi
 		# increment the counter
-		counter=$((counter+1))
+		counter=$((counter + 1))
 		# give notice
 		echo -e "XXX\n${counter}\nMoving $file\nXXX"
 	done
 done
-
