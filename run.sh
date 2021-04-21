@@ -77,6 +77,7 @@ function completedBuildMessage() {
 	# give completion message
 	if (("$QUIET" == 0)); then
 		whiptail --title "${HEADERTITLE}" --separate-output --infobox "${USER^}, the ${HEADERTITLE} build is complete!\n\n   Started: ${STARTDATE}\n     Ended: ${ENDDATE}\nBuild Time: ${SECONDSBUILD} seconds" 12 77
+		sleep 10
 	else
 		echo "${HEADERTITLE} build on ${STARTDATE} is completed in ${SECONDSBUILD} seconds!"
 	fi
