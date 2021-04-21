@@ -22,6 +22,10 @@ command -v python3 >/dev/null 2>&1 || {
 	exit 1
 }
 
+# get start time
+STARTBUILD=$(date +"%s")
+# use UTC+00:00 time also called zulu
+STARTDATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
 # main project Header
 HEADERTITLE="getBible JSON API.v2"
 
@@ -31,6 +35,8 @@ function main() {
 	if (("$HASHONLY" == 1)); then
 		# the hashing of all files
 		hashingAll
+		# show completion message
+		completedBuildMessage
 		exit
 	fi
 	# download Crosswire modules
@@ -52,12 +58,35 @@ function main() {
 	if (("$PUSH" == 1)); then
 		"${DIR_src}/moveToGithub.sh" "${DIR_api}"
 	fi
+	# show completion message
+	completedBuildMessage
+
+	exit 0
 }
 
-# manage messages
-function messagesOut() {
+# completion message
+function completedBuildMessage() {
+	# set the build time
+	ENDBUILD=$(date +"%s")
+	SECONDSBUILD=$((ENDBUILD - STARTBUILD))
+	# use UTC+00:00 time also called zulu
+	ENDDATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
+	# give completion message
 	if (("$QUIET" == 0)); then
+		whiptail --title "${HEADERTITLE}" --separate-output --infobox "${USER^}, the ${HEADERTITLE} build is complete!\n\n   Started: ${STARTDATE}\n     Ended: ${ENDDATE}\nBuild Time: ${SECONDSBUILD} seconds" 12 77
+	else
+		echo "${HEADERTITLE} build on ${STARTDATE} is completed in ${SECONDSBUILD} seconds!"
+	fi
+}
+
+# show the progress of all tasks
+function showProgress() {
+	if (("$QUIET" == 0)); then
+		# little neardy  ᒡ◯ᵔ◯ᒢ
 		whiptail --title "$1" --gauge "$2" 7 77 0
+	else
+		# looking for a better solution... ¯\_(ツ)_/¯
+		whiptail --title "$1" --gauge "$2" 7 77 0 >>/dev/null
 	fi
 }
 
@@ -79,7 +108,7 @@ function getModules() {
 		sleep 1
 		echo -e "XXX\n100\nDone downloading modules... \nXXX"
 		sleep 2
-	} | messagesOut "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
+	} | showProgress "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
 }
 
 # prep the Scripture Main Git Folder
@@ -135,7 +164,7 @@ function setStaticJsonFiles() {
 		done
 		echo -e "XXX\n100\nDone Building... \nXXX"
 		sleep 1
-	} | messagesOut "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
+	} | showProgress "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
 }
 
 # Remove Empty Folder & Static Files
@@ -198,7 +227,28 @@ function hashingMethod() {
 		sleep 1
 		echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 		sleep 1
-	} | messagesOut "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+	} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+}
+
+# set any/all default config property
+function setDefaults() {
+	if [ -f $CONFIGFILE ]; then
+		# set all defaults
+		DIR_api=$(getDefault "getbible.api" "${DIR_api}")
+		DIR_zip=$(getDefault "getbible.zip" "${DIR_zip}")
+		DIR_bible=$(getDefault "getbible.bconf" "${DIR_bible}")
+		DOWNLOAD=$(getDefault "getbible.download" "$DOWNLOAD")
+		PUSH=$(getDefault "getbible.push" "$PUSH")
+		HASHONLY=$(getDefault "getbible.hashonly" "$HASHONLY")
+		QUIET=$(getDefault "getbible.quiet" "$QUIET")
+	fi
+}
+
+# get default properties from config file
+function getDefault() {
+	PROP_KEY="$1"
+	PROP_VALUE=$(cat $CONFIGFILE | grep "$PROP_KEY" | cut -d'=' -f2)
+	echo "${PROP_VALUE:-$2}"
 }
 
 # help message ʕ•ᴥ•ʔ
@@ -209,17 +259,17 @@ Usage: ${0##*/:-} [OPTION...]
 You are able to change a few default behaviours in the getBible API builder
   ------ Passing no command options will fallback on the defaults -------
 
-	Options  ᒡ◯ᵔ◯ᒢ
+	Options
 	======================================================
    --api=<path>
 	set the API target folders full path
 		- target folders will be created using this path
 
-	example: ${0##*/:-} --api=/home/username/v2
+	example: ${0##*/:-} --api=/home/$USER/v2
 
 	two folders will be created:
-		- /home/username/v2
-		- /home/username/v2_scripture
+		- /home/$USER/v2
+		- /home/$USER/v2_scripture
 
 	defaults:
 		- repo/v2
@@ -233,10 +283,18 @@ You are able to change a few default behaviours in the getBible API builder
 		  Bible Modules that will be used to build
 		  the JSON API files
 
-	example: ${0##*/:-} --bconf=/home/username/bibles.json
+	example: ${0##*/:-} --bconf=/home/$USER/getbible.json
 
 	defaults:
 		- repo/conf/CrosswireModulesMap.json
+	======================================================
+   --conf=<path>
+	set all the config properties with a file
+
+	example: ${0##*/:-} --conf=/home/$USER/.config/getbible.conf
+
+	defaults:
+		- repo/conf/.config
 	======================================================
    --push
 	push changes to github (only if there are changes)
@@ -251,7 +309,7 @@ You are able to change a few default behaviours in the getBible API builder
    --zip=<path>
 	set the ZIP target folder full path for the Crosswire Modules
 
-	example: ${0##*/:-} --zip=/home/username/sword_zip
+	example: ${0##*/:-} --zip=/home/$USER/sword_zip
 
 	defaults:
 		- repo/sword_zip
@@ -266,6 +324,11 @@ You are able to change a few default behaviours in the getBible API builder
 	To only hash the existing JSON scripture files
 
 	example: ${0##*/:-} --hashonly
+	======================================================
+   --test
+	Run a test with only three Bibles
+
+	example: ${0##*/:-} --test
 	======================================================
    --dry
 	To show all defaults, and not run the build
@@ -284,8 +347,6 @@ You are able to change a few default behaviours in the getBible API builder
 	example: ${0##*/:-} -h
 	example: ${0##*/:-} --help
 	======================================================
-			${HEADERTITLE}
-	======================================================
 EOF
 }
 
@@ -298,6 +359,8 @@ DIR_api="${DIR}/v2"
 DIR_zip="${DIR}/sword_zip"
 # set Bible config file path
 DIR_bible="${DIR_conf}/CrosswireModulesMap.json"
+# set default config path
+CONFIGFILE="${DIR}/conf/.config"
 # download all modules
 DOWNLOAD=1
 # push changes to github (you need setup your own repos)
@@ -325,6 +388,12 @@ while :; do
 	--hashonly)
 		HASHONLY=1
 		;;
+	--test)
+		# setup the test environment
+		DIR_bible="${DIR_conf}/CrosswireModulesMapTest.json"
+		DIR_api="${DIR}/v2t"
+		DIR_zip="${DIR}/sword_zipt"
+		;;
 	--dry)
 		DRYRUN=1
 		;;
@@ -345,6 +414,22 @@ while :; do
 		;;
 	--bconf=) # Handle the case of an empty --bconf=
 		echo 'ERROR: "--bconf" requires a non-empty option argument.'
+		exit 1
+		;;
+	--conf) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			CONFIGFILE=$2
+			shift
+		else
+			echo 'ERROR: "--conf" requires a non-empty option argument.'
+			exit 1
+		fi
+		;;
+	--conf=?*)
+		CONFIGFILE=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--conf=) # Handle the case of an empty --conf=
+		echo 'ERROR: "--conf" requires a non-empty option argument.'
 		exit 1
 		;;
 	--api) # Takes an option argument; ensure it has been specified.
@@ -385,19 +470,23 @@ while :; do
 	shift
 done
 
+# check if config file is set
+setDefaults
+
 # show the config values ¯\_(ツ)_/¯
 if (("$DRYRUN" == 1)); then
 	echo "		${HEADERTITLE}"
 	echo "======================================================"
-	echo "DIR_api:   ${DIR_api}"
-	echo "DIR_zip:   ${DIR_zip}"
-	echo "DIR_src:   ${DIR_src}"
-	echo "DIR_conf:  ${DIR_conf}"
-	echo "DIR_bible: ${DIR_bible}"
-	echo "QUIET:     ${QUIET}"
-	echo "HASHONLY:  ${HASHONLY}"
-	echo "DOWNLOAD:  ${DOWNLOAD}"
-	echo "PUSH:      ${PUSH}"
+	echo "DIR_api:    ${DIR_api}"
+	echo "DIR_zip:    ${DIR_zip}"
+	echo "DIR_src:    ${DIR_src}"
+	echo "DIR_conf:   ${DIR_conf}"
+	echo "DIR_bible:  ${DIR_bible}"
+	echo "QUIET:      ${QUIET}"
+	echo "HASHONLY:   ${HASHONLY}"
+	echo "DOWNLOAD:   ${DOWNLOAD}"
+	echo "PUSH:       ${PUSH}"
+	echo "CONFIGFILE: ${CONFIGFILE}"
 	echo "======================================================"
 	exit
 fi

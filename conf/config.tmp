@@ -1,0 +1,29 @@
+###############################
+# The Config Template
+# 1. Copy file to conf/.config
+# 2. Remove keys not needed
+# 3. Update values of each key
+###############################
+key=value
+###############################
+
+# set scripture folder path (json API files)
+getbible.api=/home/$USER/v2
+
+# set the path to the Crosswire zipped modules
+getbible.zip=/home/$USER/sword_zip
+
+# set Bible config file path
+getbible.bconf=/home/$USER/v2_builder/conf/CrosswireModulesMap.json
+
+# set download behaviour 0->no download; 1->download
+getbible.download=1
+
+# push changes to github (if changes exist) 0->no push; 1->push
+getbible.push=0
+
+# only hash the scriptures 0->normal; 1->only hash
+getbible.hashonly=0
+
+# kill all messages 0->normal; 1->none
+getbible.quiet=0

@@ -69,17 +69,17 @@ Usage: ./run.sh [OPTION...]
 You are able to change a few default behaviours in the getBible API builder
   ------ Passing no command options will fallback on the defaults -------
 
-	Options  ᒡ◯ᵔ◯ᒢ
+	Options ᒡ◯ᵔ◯ᒢ
 	======================================================
    --api=<path>
 	set the API target folders full path
 		- target folders will be created using this path
 
-	example: ./run.sh --api=/home/username/v2
+	example: ./run.sh --api=/home/bible/v2
 
 	two folders will be created:
-		- /home/username/v2
-		- /home/username/v2_scripture
+		- /home/bible/v2
+		- /home/bible/v2_scripture
 
 	defaults:
 		- repo/v2
@@ -93,10 +93,18 @@ You are able to change a few default behaviours in the getBible API builder
 		  Bible Modules that will be used to build
 		  the JSON API files
 
-	example: ./run.sh --bconf=/home/username/bibles.json
+	example: ./run.sh --bconf=/home/bible/getbible.json
 
 	defaults:
 		- repo/conf/CrosswireModulesMap.json
+	======================================================
+   --conf=<path>
+	set all the config properties with a file
+
+	example: ./run.sh --conf=/home/bible/.config/getbible.conf
+
+	defaults:
+		- repo/conf/.config
 	======================================================
    --push
 	push changes to github (only if there are changes)
@@ -111,7 +119,7 @@ You are able to change a few default behaviours in the getBible API builder
    --zip=<path>
 	set the ZIP target folder full path for the Crosswire Modules
 
-	example: ./run.sh --zip=/home/username/sword_zip
+	example: ./run.sh --zip=/home/bible/sword_zip
 
 	defaults:
 		- repo/sword_zip
@@ -126,6 +134,11 @@ You are able to change a few default behaviours in the getBible API builder
 	To only hash the existing JSON scripture files
 
 	example: ./run.sh --hashonly
+	======================================================
+   --test
+	Run a test with only three Bibles
+
+	example: ./run.sh --test
 	======================================================
    --dry
 	To show all defaults, and not run the build

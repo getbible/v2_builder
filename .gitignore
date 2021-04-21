@@ -1,6 +1,6 @@
 old
 sword_zip
-test
+sword_zipt
 v2t
 v2t_scripture
 v2
@@ -8,3 +8,4 @@ v2_scripture
 venv
 .idea
 builder.log
+conf/.config
