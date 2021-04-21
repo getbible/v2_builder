@@ -347,6 +347,8 @@ You are able to change a few default behaviours in the getBible API builder
 	example: ${0##*/:-} -h
 	example: ${0##*/:-} --help
 	======================================================
+			${HEADERTITLE}
+	======================================================
 EOF
 }
 
