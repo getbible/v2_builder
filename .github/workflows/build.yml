@@ -1,0 +1,33 @@
+name: "Build getBible static JSON API files"
+
+on:
+  # run once per/day
+  schedule:
+    - cron: '7 7 * * *'
+
+  # also run if we merge staging into master
+  push:
+    branches:
+      - master
+
+  # so we can manually run a build
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [ubuntu-20.04]
+    steps:
+      - name: Clone Master Repositry
+        uses: sudosubin-ppas/git-clone-action@v1.0.0
+        with:
+          repository: getbible/v2_builder
+          ref: master
+      - name: Install Dependancies
+        run: |
+          sudo apt install python3.8 python3-pip python3-requests
+          sudo pip3 install future
+          sudo pip3 install pysword
+# not ready....
+#      - name: Build the JSON Bible files
+#        run: |
+#          /bin/bash ./run.sh --github --push

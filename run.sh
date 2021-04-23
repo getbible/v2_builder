@@ -101,18 +101,27 @@ function getModules() {
 	# we first delete the old modules
 	rm -fr "${modules_path}"
 	mkdir -p "${modules_path}"
-	# then we get the current modules
-	{
-		sleep 1
-		echo -e "XXX\n0\nStart download of modules... \nXXX"
-		sleep 1
-		python3 -u "${DIR_src}/download.py" \
-			--output_path "${modules_path}" \
-			--bible_conf "${DIR_bible}"
-		sleep 1
-		echo -e "XXX\n100\nDone downloading modules... \nXXX"
-		sleep 2
-	} | showProgress "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
+	# run in github action workflow... ¯\_(ツ)_/¯
+	if (("$GITHUB" == 1)); then
+			echo "Start download of modules..."
+			python3 "${DIR_src}/download.py" \
+				--output_path "${modules_path}" \
+				--bible_conf "${DIR_bible}" >>/dev/null
+			echo "Done downloading modules..."
+	else
+		# then we get the current modules
+		{
+			sleep 1
+			echo -e "XXX\n0\nStart download of modules... \nXXX"
+			sleep 1
+			python3 -u "${DIR_src}/download.py" \
+				--output_path "${modules_path}" \
+				--bible_conf "${DIR_bible}"
+			sleep 1
+			echo -e "XXX\n100\nDone downloading modules... \nXXX"
+			sleep 2
+		} | showProgress "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
+	fi
 }
 
 # prep the Scripture Main Git Folder
@@ -143,32 +152,50 @@ function setStaticJsonFiles() {
 	local modules_path="$2"
 	local each="$3"
 	local counter=0
-	# build the files
-	{
-		sleep 1
-		echo -e "XXX\n0\nStart Building... \nXXX"
-		sleep 1
+	# run in github action workflow... ¯\_(ツ)_/¯
+	if (("$GITHUB" == 1)); then
+		echo "Start Building..."
 		for filename in $modules_path/*.zip; do
 			# give notice
-			echo -e "XXX\n${counter}\nBuilding ${filename} static json files...\nXXX"
-			# add more
-			next=$((counter + each))
+			echo "Building ${filename} static json files"
 			# run script
-			python3 -u "${DIR_src}/sword_to_json.py" \
+			python3 "${DIR_src}/sword_to_json.py" \
 				--source_file "${filename}" \
 				--output_path "${scripture_path}" \
-				--counter "$counter" --next "$next" \
 				--conf_dir "${DIR_conf}" \
-				--bible_conf "${DIR_bible}"
-			# add more
-			counter="$next"
+				--bible_conf "${DIR_bible}" >>/dev/null
 			# give notice
-			echo -e "XXX\n${counter}\nDone building ${filename} static json files...\nXXX"
-			sleep 1
+			echo "Done building ${filename} static json files..."
 		done
-		echo -e "XXX\n100\nDone Building... \nXXX"
-		sleep 1
-	} | showProgress "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
+		echo "Done Building..."
+	else
+		# build the files
+		{
+			sleep 1
+			echo -e "XXX\n0\nStart Building... \nXXX"
+			sleep 1
+			for filename in $modules_path/*.zip; do
+				# give notice
+				echo -e "XXX\n${counter}\nBuilding ${filename} static json files...\nXXX"
+				# add more
+				next=$((counter + each))
+				# run script
+				python3 -u "${DIR_src}/sword_to_json.py" \
+					--source_file "${filename}" \
+					--output_path "${scripture_path}" \
+					--counter "$counter" --next "$next" \
+					--conf_dir "${DIR_conf}" \
+					--bible_conf "${DIR_bible}"
+				# add more
+				counter="$next"
+				# give notice
+				echo -e "XXX\n${counter}\nDone building ${filename} static json files...\nXXX"
+				sleep 1
+			done
+			echo -e "XXX\n100\nDone Building... \nXXX"
+			sleep 1
+		} | showProgress "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
+	fi
 }
 
 # Remove Empty Folder & Static Files
@@ -225,16 +252,26 @@ function hashingMethod() {
 	local w_end_ms="$5"
 	local w_initial_ms="$6"
 	local each="$7"
-	# now run the hashing
-	{
-		sleep 1
-		echo -e "XXX\n0\n${w_start_ms}... \nXXX"
-		sleep 1
-		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each"
-		sleep 1
-		echo -e "XXX\n100\n${w_end_ms}... \nXXX"
-		sleep 1
-	} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+	# run in github action workflow... ¯\_(ツ)_/¯
+	if (("$GITHUB" == 1)); then
+		echo "$w_title | ${HEADERTITLE}"
+		echo "$w_initial_ms"
+		echo "${w_start_ms}..."
+		# now run the hashing
+		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" >>/dev/null
+		echo "${w_end_ms}..."
+	else
+		# now run the hashing
+		{
+			sleep 1
+			echo -e "XXX\n0\n${w_start_ms}... \nXXX"
+			sleep 1
+			. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each"
+			sleep 1
+			echo -e "XXX\n100\n${w_end_ms}... \nXXX"
+			sleep 1
+		} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+	fi
 }
 
 # set any/all default config property
@@ -247,6 +284,7 @@ function setDefaults() {
 		DOWNLOAD=$(getDefault "getbible.download" "$DOWNLOAD")
 		PUSH=$(getDefault "getbible.push" "$PUSH")
 		HASHONLY=$(getDefault "getbible.hashonly" "$HASHONLY")
+		GITHUB=$(getDefault "getbible.github" "$GITHUB")
 		QUIET=$(getDefault "getbible.quiet" "$QUIET")
 	fi
 }
@@ -332,6 +370,11 @@ You are able to change a few default behaviours in the getBible API builder
 
 	example: ${0##*/:-} --hashonly
 	======================================================
+   --github
+	Trigger github workflow behaviour
+
+	example: ${0##*/:-} --github
+	======================================================
    --test
 	Run a test with only three Bibles
 
@@ -380,6 +423,8 @@ DRYRUN=0
 HASHONLY=0
 # kill all messages
 QUIET=0
+# trigger github workflow behaviour
+GITHUB=0
 
 # check if we have options
 while :; do
@@ -405,6 +450,11 @@ while :; do
 		;;
 	--dry)
 		DRYRUN=1
+		;;
+	--github)
+		# github actions workflow behaviour... ¯\_(ツ)_/¯
+		GITHUB=1
+		QUIET=1
 		;;
 	--push)
 		PUSH=1
@@ -493,6 +543,7 @@ if (("$DRYRUN" == 1)); then
 	echo "DIR_bible:  ${DIR_bible}"
 	echo "QUIET:      ${QUIET}"
 	echo "HASHONLY:   ${HASHONLY}"
+	echo "GITHUB:     ${GITHUB}"
 	echo "DOWNLOAD:   ${DOWNLOAD}"
 	echo "PUSH:       ${PUSH}"
 	echo "CONFIGFILE: ${CONFIGFILE}"

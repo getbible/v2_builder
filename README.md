@@ -27,13 +27,14 @@ Should you like to contribute any improvements either in code or conduct, just o
 
 Install Python3.8+
 ```bash 
-$ sudo apt-get update
-$ sudo apt-get install python3.8 python3-pip
+$ sudo apt update
+$ sudo apt install python3.8 python3-pip python3-requests
 ```
 > make sure the [python3 version is 3.8](https://askubuntu.com/a/892322/379265) or higher so that the JSON order remains the same as found on [our API](https://github.com/getbible/v2), else your hash values will not be the same.
 
 Install [pysword](https://gitlab.com/tgc-dk/pysword) (A native Python reader of the SWORD Project Bible Modules)
 ```bash
+$ sudo pip3 install future
 $ sudo pip3 install pysword
 ```
 
@@ -134,6 +135,11 @@ You are able to change a few default behaviours in the getBible API builder
 	To only hash the existing JSON scripture files
 
 	example: ./run.sh --hashonly
+	======================================================
+   --github
+	Trigger github workflow behaviour
+
+	example: ./run.sh --github
 	======================================================
    --test
 	Run a test with only three Bibles

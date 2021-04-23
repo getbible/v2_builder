@@ -15,8 +15,8 @@ parser = argparse.ArgumentParser()
 # get the arguments
 parser.add_argument('--source_file')
 parser.add_argument('--output_path')
-parser.add_argument('--counter')
-parser.add_argument('--next')
+parser.add_argument('--counter', default=0)
+parser.add_argument('--next', default=90)
 parser.add_argument('--conf_dir')
 parser.add_argument('--bible_conf')
 # set to args
