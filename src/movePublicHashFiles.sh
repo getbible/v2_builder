@@ -8,27 +8,42 @@ fi
 
 # target folder
 API_path="$1"
-each="${2:-1}"
-
 scripture_path="${API_path}_scripture"
 hash_path="${API_path}"
+# counter value
+each="${2:-1}"
+# should we clone/pull (default no)
+PULL="${3:-0}"
+# the hash repo
+REPOHASH="${4}"
 
-# check if the target to folder exist
-if [ -d "$hash_path" ]; then
-	# reset the git folder on each run
-	if [ -d "${hash_path}/.git" ]; then
-		mkdir -p "${hash_path}Tmp"
-		mv -f "${hash_path}/.git" "${hash_path}Tmp"
-		mv -f "${hash_path}/LICENSE" "${hash_path}Tmp"
-		mv -f "${hash_path}/README.md" "${hash_path}Tmp"
-
-		# now we remove all the old git files (so we start clean each time in the build)
-		rm -fr $hash_path
-		mv -f "${hash_path}Tmp" "${hash_path}"
+# if git folder does not exist clone it
+if [ ! -d "${hash_path}" ]; then
+	# check if we must pull the REPO
+	if (("$PULL" == 1)); then
+		# pull the main scripture repository
+		git clone --depth 1 "${REPOHASH}" "${hash_path}"
+		# pull only once
+		PULL=0
+	else
+		# create the git folder (for scripture)
+		mkdir -p "${hash_path}"
 	fi
-else
-	# make sure it is created
-	mkdir -p "$hash_path"
+fi
+# reset the git folder on each run
+if [ -d "${hash_path}/.git" ]; then
+	# make a pull if needed still (update the git history)
+	if (("$PULL" == 1)); then
+		cd "${hash_path}" && git pull && cd -
+	fi
+	mkdir -p "${hash_path}Tmp"
+	mv -f "${hash_path}/.git" "${hash_path}Tmp"
+	mv -f "${hash_path}/LICENSE" "${hash_path}Tmp"
+	mv -f "${hash_path}/README.md" "${hash_path}Tmp"
+
+	# now we remove all the old git files (so we start clean each time in the build)
+	rm -fr $hash_path
+	mv -f "${hash_path}Tmp" "${hash_path}"
 fi
 
 ## declare an array variable

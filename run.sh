@@ -103,11 +103,11 @@ function getModules() {
 	mkdir -p "${modules_path}"
 	# run in github action workflow... ¯\_(ツ)_/¯
 	if (("$GITHUB" == 1)); then
-			echo "Start download of modules..."
-			python3 "${DIR_src}/download.py" \
-				--output_path "${modules_path}" \
-				--bible_conf "${DIR_bible}" >>/dev/null
-			echo "Done downloading modules..."
+		echo "Start download of modules..."
+		python3 "${DIR_src}/download.py" \
+			--output_path "${modules_path}" \
+			--bible_conf "${DIR_bible}" >>/dev/null
+		echo "Done downloading modules..."
 	else
 		# then we get the current modules
 		{
@@ -128,13 +128,26 @@ function getModules() {
 function prepScriptureMainGit() {
 	# set local values
 	local scripture_path="$1"
+	local pull="$PULL"
 	# if git folder does not exist clone it
 	if [ ! -d "${scripture_path}" ]; then
-		# create the git folder (for scripture)
-		mkdir -p "${scripture_path}"
+		# check if we must pull the REPO
+		if (("$pull" == 1)); then
+			# pull the main scripture repository
+			git clone --depth 1 "${REPOSCRIPTURE}" "${scripture_path}"
+			# pull only once
+			pull=0
+		else
+			# create the git folder (for scripture)
+			mkdir -p "${scripture_path}"
+		fi
 	fi
 	# reset the git folder on each run
 	if [ -d "${scripture_path}/.git" ]; then
+		# make a pull if needed still (update the git history)
+		if (("$pull" == 1)); then
+			cd "${scripture_path}" && git pull && cd -
+		fi
 		mkdir -p "${scripture_path}Tmp"
 		mv -f "${scripture_path}/.git" "${scripture_path}Tmp"
 		mv -f "${scripture_path}/.gitignore" "${scripture_path}Tmp"
@@ -142,6 +155,38 @@ function prepScriptureMainGit() {
 		# now we remove all the old git files (so we start clean each time in the build)
 		rm -fr "${scripture_path}"
 		mv -f "${scripture_path}Tmp" "${scripture_path}"
+	fi
+}
+
+# moving all public hash files
+function movePublicHashFiles () {
+	# set local values
+	local scripture_path="$1"
+	local script_name="$2"
+	local w_title="$3"
+	local w_start_ms="$4"
+	local w_end_ms="$5"
+	local w_initial_ms="$6"
+	local each="$7"
+	# run in github action workflow... ¯\_(ツ)_/¯
+	if (("$GITHUB" == 1)); then
+		echo "$w_title | ${HEADERTITLE}"
+		echo "$w_initial_ms"
+		echo "${w_start_ms}..."
+		# now run the hashing
+		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPOHASH}" >>/dev/null
+		echo "${w_end_ms}..."
+	else
+		# now run the hashing
+		{
+			sleep 1
+			echo -e "XXX\n0\n${w_start_ms}... \nXXX"
+			sleep 1
+			. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPOHASH}"
+			sleep 1
+			echo -e "XXX\n100\n${w_end_ms}... \nXXX"
+			sleep 1
+		} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
 	fi
 }
 
@@ -234,7 +279,7 @@ function hashingAll() {
 		"Done Hashing All Versions Books Chapters" \
 		"Please wait while we hash all versions books chapters" "$each"
 	# moving all public hash files into place
-	hashingMethod "${DIR_api}" \
+	movePublicHashFiles "${DIR_api}" \
 		"movePublicHashFiles" \
 		"Moving Public Hash" \
 		"Start Moving Public Hashes" \
@@ -282,7 +327,10 @@ function setDefaults() {
 		DIR_zip=$(getDefault "getbible.zip" "${DIR_zip}")
 		DIR_bible=$(getDefault "getbible.bconf" "${DIR_bible}")
 		DOWNLOAD=$(getDefault "getbible.download" "$DOWNLOAD")
+		REPOSCRIPTURE=$(getDefault "getbible.repo-scripture" "${REPOSCRIPTURE}")
+		REPOHASH=$(getDefault "getbible.repo-hash" "${REPOHASH}")
 		PUSH=$(getDefault "getbible.push" "$PUSH")
+		PULL=$(getDefault "getbible.pull" "$PULL")
 		HASHONLY=$(getDefault "getbible.hashonly" "$HASHONLY")
 		GITHUB=$(getDefault "getbible.github" "$GITHUB")
 		QUIET=$(getDefault "getbible.quiet" "$QUIET")
@@ -340,6 +388,11 @@ You are able to change a few default behaviours in the getBible API builder
 
 	defaults:
 		- repo/conf/.config
+	======================================================
+   --pull
+	clone and/or pull target folders/repositories
+
+	example: ${0##*/:-} --pull
 	======================================================
    --push
 	push changes to github (only if there are changes)
@@ -404,6 +457,9 @@ EOF
 
 # get script path
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# the target repos
+REPOSCRIPTURE="" # must be a private REPO (please)
+REPOHASH="git@github.com:getbible/v2.git"
 # set working paths
 DIR_src="${DIR}/src"
 DIR_conf="${DIR}/conf"
@@ -415,7 +471,9 @@ DIR_bible="${DIR_conf}/CrosswireModulesMap.json"
 CONFIGFILE="${DIR}/conf/.config"
 # download all modules
 DOWNLOAD=1
-# push changes to github (you need setup your own repos)
+# clone and/or pull target repositories
+PULL=0
+# push changes to github if repos connected, and has changes
 PUSH=0
 # show values do not run
 DRYRUN=0
@@ -456,6 +514,9 @@ while :; do
 		GITHUB=1
 		QUIET=1
 		;;
+	--pull)
+		PULL=1
+		;;
 	--push)
 		PUSH=1
 		;;
@@ -473,6 +534,38 @@ while :; do
 		;;
 	--bconf=) # Handle the case of an empty --bconf=
 		echo 'ERROR: "--bconf" requires a non-empty option argument.'
+		exit 1
+		;;
+	--repo-hash) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			REPOHASH=$2
+			shift
+		else
+			echo 'ERROR: "--repo-hash" requires a non-empty option argument.'
+			exit 1
+		fi
+		;;
+	--repo-hash=?*)
+		REPOHASH=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--repo-hash=) # Handle the case of an empty --repo-hash=
+		echo 'ERROR: "--repo-hash" requires a non-empty option argument.'
+		exit 1
+		;;
+	--repo-scripture) # Takes an option argument; ensure it has been specified.
+		if [ "$2" ]; then
+			REPOSCRIPTURE=$2
+			shift
+		else
+			echo 'ERROR: "--repo-scripture" requires a non-empty option argument.'
+			exit 1
+		fi
+		;;
+	--repo-scripture=?*)
+		REPOSCRIPTURE=${1#*=} # Delete everything up to "=" and assign the remainder.
+		;;
+	--repo-scripture=) # Handle the case of an empty --repo-scripture=
+		echo 'ERROR: "--repo-scripture" requires a non-empty option argument.'
 		exit 1
 		;;
 	--conf) # Takes an option argument; ensure it has been specified.
@@ -545,6 +638,7 @@ if (("$DRYRUN" == 1)); then
 	echo "HASHONLY:   ${HASHONLY}"
 	echo "GITHUB:     ${GITHUB}"
 	echo "DOWNLOAD:   ${DOWNLOAD}"
+	echo "PULL:       ${PULL}"
 	echo "PUSH:       ${PUSH}"
 	echo "CONFIGFILE: ${CONFIGFILE}"
 	echo "======================================================"

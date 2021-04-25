@@ -30,4 +30,4 @@ jobs:
 # not ready....
 #      - name: Build the JSON Bible files
 #        run: |
-#          /bin/bash ./run.sh --github --push
+#          /bin/bash ./run.sh --github --pull --push

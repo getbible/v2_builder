@@ -107,6 +107,11 @@ You are able to change a few default behaviours in the getBible API builder
 	defaults:
 		- repo/conf/.config
 	======================================================
+   --pull
+	clone and/or pull target folders/repositories
+
+	example: ./run.sh --pull
+	======================================================
    --push
 	push changes to github (only if there are changes)
 		- setup the target folders (see target folders)

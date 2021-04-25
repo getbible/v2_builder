@@ -19,7 +19,10 @@ getbible.bconf=/home/username/v2_builder/conf/CrosswireModulesMap.json
 # set download behaviour 0->no download; 1->download
 getbible.download=1
 
-# push changes to github (if changes exist) 0->no push; 1->push
+# clone and/or pull target repositories 0->no pull/clone; 1->pull/clone
+getbible.pull=0
+
+# push changes to github if repositories connected, and has changes 0->no push; 1->push
 getbible.push=0
 
 # only hash the scriptures 0->normal; 1->only hash
