@@ -3,7 +3,7 @@ name: "Build getBible static JSON API files"
 on:
   # run once per/day
   schedule:
-    - cron: '7 7 * * *'
+    - cron: '7 7 * * 3'
 
   # also run if we merge staging into master
   push:
@@ -24,10 +24,22 @@ jobs:
           ref: master
       - name: Install Dependancies
         run: |
-          sudo apt install python3.8 python3-pip python3-requests
+          sudo apt install python3.8 python3-pip python3-requests tomb zsh zsh-common steghide
           sudo pip3 install future
           sudo pip3 install pysword
-# not ready....
-#      - name: Build the JSON Bible files
-#        run: |
-#          /bin/bash ./run.sh --github --pull --push
+      - name: Setup gitHub User Details
+        env:
+          GIT_USER: ${{ secrets.GETBIBLE_GIT_USER }}
+          GIT_EMAIL: ${{ secrets.GETBIBLE_GIT_EMAIL }}
+          GPG_USER: ${{ secrets.GETBIBLE_GPG_USER }}
+          GPG_KEY: ${{ secrets.GETBIBLE_GPG_KEY }}
+          SSH_KEY: ${{ secrets.GETBIBLE_SSH_KEY }}
+          SSH_PUB: ${{ secrets.GETBIBLE_SSH_PUB }}
+        run: |
+          /bin/bash ./src/setGithubUser.sh --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
+      - name: Build the JSON Bible files
+        env:
+          HASH_REPO: ${{ secrets.GETBIBLE_HASH_REPO }}
+          SCRIPTURE_REPO: ${{ secrets.GETBIBLE_SCRIPTURE_REPO }}
+        run: |
+          /bin/bash ./run.sh --github --pull --push --repo-hash="$HASH_REPO" --repo-scripture="$SCRIPTURE_REPO"
