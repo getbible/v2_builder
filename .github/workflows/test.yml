@@ -29,7 +29,7 @@ jobs:
           SSH_KEY: ${{ secrets.GETBIBLE_SSH_KEY }}
           SSH_PUB: ${{ secrets.GETBIBLE_SSH_PUB }}
         run: |
-          /bin/bash ./src/setGithubUser.sh --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
+          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
       - name: Build the JSON Bible files
         env:
           HASH_REPO: ${{ secrets.GETBIBLE_HASH_REPO_T }}

@@ -191,26 +191,26 @@ You will need to setup a list of secrets in your fork of v2_builder.
 - GETBIBLE_GIT_EMAIL
 > The github username being used to build
 - GETBIBLE_GIT_USER
-> gpg -a --export-secret-keys >myprivatekeys.asc 
+> `gpg -a --export-secret-keys >myprivatekeys.asc`
 > The whole key file text from the above myprivatekeys.asc
 > This key must be linked to the github user being used
 - GETBIBLE_GPG_KEY
 > The name of the myprivatekeys.asc user
 - GETBIBLE_GPG_USER
 > A **OFFICIAL** repository of the hash files
-> like: git@github.com:getbible/v2.git
+> like: `git@github.com:getbible/v2.git`
 > the github user must have push/pull access to this repo
 - GETBIBLE_HASH_REPO
 > A **TEST** repository of the hash files
-> like: git@github.com:Llewellyn/v2.git
+> like: `git@github.com:Llewellyn/v2.git`
 > the github user must have push/pull access to this repo
 - GETBIBLE_HASH_REPO_T
 > A **OFFICIAL** repository of the scripture files
-> like: git@github.com:getbible/v2_scripture.git
+> like: `git@github.com:getbible/v2_scripture.git`
 > the github user must have push/pull access to this repo
 - GETBIBLE_SCRIPTURE_REPO
 > A **TEST** repository of the scripture files
-> like: git@github.com:Llewellyn/v2_scripture.git
+> like: `git@github.com:Llewellyn/v2_scripture.git`
 > the github user must have push/pull access to this repo
 - GETBIBLE_SCRIPTURE_REPO_T
 > A id_ed25519 ssh private key liked to the github user account
