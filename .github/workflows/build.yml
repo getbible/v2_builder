@@ -16,7 +16,7 @@ jobs:
           ref: master
       - name: Install Dependancies
         run: |
-          sudo apt install python3.8 python3-pip python3-requests tomb zsh zsh-common steghide
+          sudo apt install python3.8 python3-pip python3-requests
           sudo pip3 install future
           sudo pip3 install pysword
       - name: Setup gitHub User Details
