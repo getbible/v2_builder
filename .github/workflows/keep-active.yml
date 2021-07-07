@@ -1,0 +1,30 @@
+name: "Keep the builder repository active!"
+
+on:
+  # run Thursday at 02:22 every week 
+  schedule:
+    - cron: '22 2 * * THU'
+  # so we can manually update
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [ubuntu-20.04]
+    steps:
+      - name: Setup gitHub User Details
+        env:
+          GIT_USER: ${{ secrets.GETBIBLE_GIT_USER }}
+          GIT_EMAIL: ${{ secrets.GETBIBLE_GIT_EMAIL }}
+          GPG_USER: ${{ secrets.GETBIBLE_GPG_USER }}
+          GPG_KEY: ${{ secrets.GETBIBLE_GPG_KEY }}
+          SSH_KEY: ${{ secrets.GETBIBLE_SSH_KEY }}
+          SSH_PUB: ${{ secrets.GETBIBLE_SSH_PUB }}
+        run: |
+          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
+      - name: Clone Master Repository
+        run: |
+          /bin/git clone git@github.com:getbible/v2_builder.git v2_builder
+      - name: Set Active
+        run: |
+          cd v2_builder
+          /bin/bash ./src/active.sh
