@@ -3,7 +3,7 @@ name: "Build getBible static JSON API files"
 on:
   # run once per/day
   schedule:
-    - cron: '7 7 * * 3'
+    - cron: '12 4 1 * *'
 
 jobs:
   build:
