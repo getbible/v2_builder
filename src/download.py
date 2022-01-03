@@ -1,4 +1,10 @@
-import os, os.path, json, urllib, urllib.request, sys, zipfile, shutil, argparse
+import argparse
+import json
+import os
+import os.path
+import shutil
+import urllib.request
+import zipfile
 
 parser = argparse.ArgumentParser()
 # get the arguments
@@ -14,32 +20,35 @@ v1_translation_names = json.loads(open(args.bible_conf).read())
 # scripts directory
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
+
 # function to create path if not exist
 def check_path(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
+
 def zipper(src, dest, filename):
     """Backup files from src to dest."""
     base = os.path.basename(src)
-    newFile = filename+".zip"
+    new_file = filename + ".zip"
 
     # Set the current working directory.
     os.chdir(dest)
 
-    if os.path.exists(newFile):
-        os.unlink(newFile)
+    if os.path.exists(new_file):
+        os.unlink(new_file)
 
     # Write the zipfile and walk the source directory tree.
-    with zipfile.ZipFile(newFile, 'w') as zip:
-        for folder, _ , files in os.walk(src):
+    with zipfile.ZipFile(new_file, 'w') as zip_file:
+        for folder, _, files in os.walk(src):
             for file in files:
-                zip.write(os.path.join(folder, file),
-                          arcname=os.path.join(folder[len(src):], file),
-                          compress_type=zipfile.ZIP_DEFLATED)
+                zip_file.write(os.path.join(folder, file),
+                               arcname=os.path.join(folder[len(src):], file),
+                               compress_type=zipfile.ZIP_DEFLATED)
 
     # move back to working directory
     os.chdir(CURRENT_DIR)
+
 
 # make sure the main folder exist
 check_path(MAIN_PATH)
@@ -50,11 +59,11 @@ counter = 0
 # loop the names
 for sword_name in v1_translation_names:
     # set local file name
-    file_path = MAIN_PATH+"/"+sword_name+".zip"
+    file_path = MAIN_PATH + "/" + sword_name + ".zip"
     # set remote URL
-    file_url = "http://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/"+sword_name+".zip"
+    file_url = "https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/" + sword_name + ".zip"
     # notice name
-    file_name = sword_name+".zip"
+    file_name = sword_name + ".zip"
     # check if file exist locally
     if os.path.isfile(file_path):
         print('XXX\n{}\n{} already exist\nXXX'.format(counter, file_name))
@@ -65,25 +74,26 @@ for sword_name in v1_translation_names:
         except urllib.error.HTTPError as e:
             print('XXX\n{} Download {} failed! {}\nXXX'.format(counter, sword_name, e))
     # check if this is a legitimate zip file
-    if zipfile.is_zipfile(file_path) == False:
+    if not zipfile.is_zipfile(file_path):
         os.remove(file_path)
         print('XXX\n{}\n{} was removed since it has errors...\nXXX'.format(counter, file_path))
         # we try the win repository
-        file_url = "http://www.crosswire.org/ftpmirror/pub/sword/packages/win/" + sword_name + ".zip"
+        file_url = "https://www.crosswire.org/ftpmirror/pub/sword/packages/win/" + sword_name + ".zip"
         try:
             print('XXX\n{}\nDownloading the WIN format of {}\nXXX'.format(counter, file_name))
             urllib.request.urlretrieve(file_url, file_path)
         except urllib.error.HTTPError as e:
+            # noinspection PyStringFormat
             print('XXX\n{}\n{} Download {} failed! {}\nXXX'.format(sword_name, e))
         # again check if this is a legitimate zip file
-        if zipfile.is_zipfile(file_path) == False:
+        if not zipfile.is_zipfile(file_path):
             os.remove(file_path)
             print('XXX\n{}\n{} was again removed since it has errors...\nXXX'.format(counter, file_name))
         else:
             # set local file name
-            folder_path = MAIN_PATH+"/"+sword_name
-            folder_raw_path = MAIN_PATH+"/"+sword_name+"/RAW"
-            data_raw_path = MAIN_PATH+"/"+sword_name+"/data.zip"
+            folder_path = MAIN_PATH + "/" + sword_name
+            folder_raw_path = MAIN_PATH + "/" + sword_name + "/RAW"
+            data_raw_path = MAIN_PATH + "/" + sword_name + "/data.zip"
             print('XXX\n{}\n{} is being converted to RAW format\nXXX'.format(counter, file_name))
             # first we extract the WIN format
             with zipfile.ZipFile(file_path, 'r') as zip_ref:
@@ -94,7 +104,7 @@ for sword_name in v1_translation_names:
                 zip_ref.extractall(folder_raw_path)
             os.remove(data_raw_path)
             # now rename the folder
-            os.rename(folder_raw_path+"/newmods", folder_raw_path+"/mods.d")
+            os.rename(folder_raw_path + "/newmods", folder_raw_path + "/mods.d")
             # now zip the RAW folder
             zipper(folder_raw_path, MAIN_PATH, sword_name)
             # now remove the tmp folder

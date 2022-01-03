@@ -23,17 +23,18 @@ command -v python3 >/dev/null 2>&1 || {
 }
 
 # get start time
-STARTBUILD=$(date +"%s")
+START_BUILD=$(date +"%s")
 # use UTC+00:00 time also called zulu
-STARTDATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
+START_DATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
 # main project Header
-HEADERTITLE="getBible JSON API.v2"
+HEADER_TITLE="getBible JSON API.v2"
 
 # main function ˘Ô≈ôﺣ
 function main() {
 	# Only Hash existing scripture JSON files
-	if (("$HASHONLY" == 1)); then
+	if (("$HASH_ONLY" == 1)); then
 		# numbers
+		# shellcheck disable=SC2012
 		number=$(ls "${DIR_zip}" | wc -l)
 		each_count=$((98 / number))
 		# the hashing of all files
@@ -47,6 +48,7 @@ function main() {
 		getModules "${DIR_zip}"
 	fi
 	# numbers
+	# shellcheck disable=SC2012
 	number=$(ls "${DIR_zip}" | wc -l)
 	each_count=$((98 / number))
 	# prep the Scripture Main Git Folder
@@ -70,16 +72,16 @@ function main() {
 # completion message
 function completedBuildMessage() {
 	# set the build time
-	ENDBUILD=$(date +"%s")
-	SECONDSBUILD=$((ENDBUILD - STARTBUILD))
+	END_BUILD=$(date +"%s")
+	SECONDS_BUILD=$((END_BUILD - START_BUILD))
 	# use UTC+00:00 time also called zulu
-	ENDDATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
+	END_DATE=$(TZ=":ZULU" date +"%m/%d/%Y @ %R (UTC)")
 	# give completion message
 	if (("$QUIET" == 0)); then
-		whiptail --title "${HEADERTITLE}" --separate-output --infobox "${USER^}, the ${HEADERTITLE} build is complete!\n\n   Started: ${STARTDATE}\n     Ended: ${ENDDATE}\nBuild Time: ${SECONDSBUILD} seconds" 12 77
+		whiptail --title "${HEADER_TITLE}" --separate-output --infobox "${USER^}, the ${HEADER_TITLE} build is complete!\n\n   Started: ${START_DATE}\n     Ended: ${END_DATE}\nBuild Time: ${SECONDS_BUILD} seconds" 12 77
 		sleep 10
 	else
-		echo "${HEADERTITLE} build on ${STARTDATE} is completed in ${SECONDSBUILD} seconds!"
+		echo "${HEADER_TITLE} build on ${START_DATE} is completed in ${SECONDS_BUILD} seconds!"
 	fi
 }
 
@@ -102,11 +104,11 @@ function getModules() {
 	rm -fr "${modules_path}"
 	mkdir -p "${modules_path}"
 	# run in github action workflow... ¯\_(ツ)_/¯
-	if (("$GITHUB" == 1)); then
+	if (("$GIT_HUB" == 1)); then
 		echo "Start download of modules..."
 		python3 "${DIR_src}/download.py" \
 			--output_path "${modules_path}" \
-			--bible_conf "${DIR_bible}" >>/dev/null
+			--bible_conf "${DIR_bible}"
 		echo "Done downloading modules..."
 	else
 		# then we get the current modules
@@ -120,7 +122,7 @@ function getModules() {
 			sleep 1
 			echo -e "XXX\n100\nDone downloading modules... \nXXX"
 			sleep 2
-		} | showProgress "Get Crosswire Modules | ${HEADERTITLE}" "Please wait while we download all modules"
+		} | showProgress "Get Crosswire Modules | ${HEADER_TITLE}" "Please wait while we download all modules"
 	fi
 }
 
@@ -134,7 +136,7 @@ function prepScriptureMainGit() {
 		# check if we must pull the REPO
 		if (("$pull" == 1)); then
 			# pull the main scripture repository
-			git clone --depth 1 "${REPOSCRIPTURE}" "${scripture_path}"
+			git clone --depth 1 "${REPO_SCRIPTURE}" "${scripture_path}"
 			# pull only once
 			pull=0
 		else
@@ -146,6 +148,7 @@ function prepScriptureMainGit() {
 	if [ -d "${scripture_path}/.git" ]; then
 		# make a pull if needed still (update the git history)
 		if (("$pull" == 1)); then
+			# shellcheck disable=SC2164
 			cd "${scripture_path}" && git pull && cd -
 		fi
 		mkdir -p "${scripture_path}Tmp"
@@ -169,12 +172,13 @@ function movePublicHashFiles () {
 	local w_initial_ms="$6"
 	local each="$7"
 	# run in github action workflow... ¯\_(ツ)_/¯
-	if (("$GITHUB" == 1)); then
-		echo "$w_title | ${HEADERTITLE}"
+	if (("$GIT_HUB" == 1)); then
+		echo "$w_title | ${HEADER_TITLE}"
 		echo "$w_initial_ms"
 		echo "${w_start_ms}..."
 		# now run the hashing
-		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPOHASH}" >>/dev/null
+		# shellcheck disable=SC1090
+		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPO_HASH}" >>/dev/null
 		echo "${w_end_ms}..."
 	else
 		# now run the hashing
@@ -182,11 +186,12 @@ function movePublicHashFiles () {
 			sleep 1
 			echo -e "XXX\n0\n${w_start_ms}... \nXXX"
 			sleep 1
-			. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPOHASH}"
+			# shellcheck disable=SC1090
+			. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" "$PULL" "${REPO_HASH}"
 			sleep 1
 			echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 			sleep 1
-		} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+		} | showProgress "$w_title | ${HEADER_TITLE}" "$w_initial_ms"
 	fi
 }
 
@@ -198,9 +203,9 @@ function setStaticJsonFiles() {
 	local each="$3"
 	local counter=0
 	# run in github action workflow... ¯\_(ツ)_/¯
-	if (("$GITHUB" == 1)); then
+	if (("$GIT_HUB" == 1)); then
 		echo "Start Building..."
-		for filename in $modules_path/*.zip; do
+		for filename in "${modules_path}/"*.zip; do
 			# give notice
 			echo "Building ${filename} static json files"
 			# run script
@@ -208,7 +213,7 @@ function setStaticJsonFiles() {
 				--source_file "${filename}" \
 				--output_path "${scripture_path}" \
 				--conf_dir "${DIR_conf}" \
-				--bible_conf "${DIR_bible}" >>/dev/null
+				--bible_conf "${DIR_bible}"
 			# give notice
 			echo "Done building ${filename} static json files..."
 		done
@@ -219,7 +224,7 @@ function setStaticJsonFiles() {
 			sleep 1
 			echo -e "XXX\n0\nStart Building... \nXXX"
 			sleep 1
-			for filename in $modules_path/*.zip; do
+			for filename in "${modules_path}/"*.zip; do
 				# give notice
 				echo -e "XXX\n${counter}\nBuilding ${filename} static json files...\nXXX"
 				# add more
@@ -239,7 +244,7 @@ function setStaticJsonFiles() {
 			done
 			echo -e "XXX\n100\nDone Building... \nXXX"
 			sleep 1
-		} | showProgress "Build Static JSON Files | ${HEADERTITLE}" "Please wait while build the static json API"
+		} | showProgress "Build Static JSON Files | ${HEADER_TITLE}" "Please wait while build the static json API"
 	fi
 }
 
@@ -298,11 +303,12 @@ function hashingMethod() {
 	local w_initial_ms="$6"
 	local each="$7"
 	# run in github action workflow... ¯\_(ツ)_/¯
-	if (("$GITHUB" == 1)); then
-		echo "$w_title | ${HEADERTITLE}"
+	if (("$GIT_HUB" == 1)); then
+		echo "$w_title | ${HEADER_TITLE}"
 		echo "$w_initial_ms"
 		echo "${w_start_ms}..."
 		# now run the hashing
+		# shellcheck disable=SC1090
 		. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each" >>/dev/null
 		echo "${w_end_ms}..."
 	else
@@ -311,28 +317,29 @@ function hashingMethod() {
 			sleep 1
 			echo -e "XXX\n0\n${w_start_ms}... \nXXX"
 			sleep 1
+			# shellcheck disable=SC1090
 			. "${DIR_src}/${script_name}.sh" "${scripture_path}" "$each"
 			sleep 1
 			echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 			sleep 1
-		} | showProgress "$w_title | ${HEADERTITLE}" "$w_initial_ms"
+		} | showProgress "$w_title | ${HEADER_TITLE}" "$w_initial_ms"
 	fi
 }
 
 # set any/all default config property
 function setDefaults() {
-	if [ -f $CONFIGFILE ]; then
+	if [ -f "$CONFIG_FILE" ]; then
 		# set all defaults
 		DIR_api=$(getDefault "getbible.api" "${DIR_api}")
 		DIR_zip=$(getDefault "getbible.zip" "${DIR_zip}")
 		DIR_bible=$(getDefault "getbible.bconf" "${DIR_bible}")
 		DOWNLOAD=$(getDefault "getbible.download" "$DOWNLOAD")
-		REPOSCRIPTURE=$(getDefault "getbible.repo-scripture" "${REPOSCRIPTURE}")
-		REPOHASH=$(getDefault "getbible.repo-hash" "${REPOHASH}")
+		REPO_SCRIPTURE=$(getDefault "getbible.repo-scripture" "${REPO_SCRIPTURE}")
+		REPO_HASH=$(getDefault "getbible.repo-hash" "${REPO_HASH}")
 		PUSH=$(getDefault "getbible.push" "$PUSH")
 		PULL=$(getDefault "getbible.pull" "$PULL")
-		HASHONLY=$(getDefault "getbible.hashonly" "$HASHONLY")
-		GITHUB=$(getDefault "getbible.github" "$GITHUB")
+		HASH_ONLY=$(getDefault "getbible.hashonly" "$HASH_ONLY")
+		GIT_HUB=$(getDefault "getbible.github" "$GIT_HUB")
 		QUIET=$(getDefault "getbible.quiet" "$QUIET")
 	fi
 }
@@ -340,7 +347,8 @@ function setDefaults() {
 # get default properties from config file
 function getDefault() {
 	PROP_KEY="$1"
-	PROP_VALUE=$(cat $CONFIGFILE | grep "$PROP_KEY" | cut -d'=' -f2)
+	# shellcheck disable=SC2002
+	PROP_VALUE=$(cat "$CONFIG_FILE" | grep "$PROP_KEY" | cut -d'=' -f2)
 	echo "${PROP_VALUE:-$2}"
 }
 
@@ -450,7 +458,7 @@ You are able to change a few default behaviours in the getBible API builder
 	example: ${0##*/:-} -h
 	example: ${0##*/:-} --help
 	======================================================
-			${HEADERTITLE}
+			${HEADER_TITLE}
 	======================================================
 EOF
 }
@@ -458,8 +466,8 @@ EOF
 # get script path
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # the target repos
-REPOSCRIPTURE="" # must be a private REPO (please)
-REPOHASH="git@github.com:getbible/v2.git"
+REPO_SCRIPTURE="" # must be a private REPO (please)
+REPO_HASH="git@github.com:getbible/v2.git"
 # set working paths
 DIR_src="${DIR}/src"
 DIR_conf="${DIR}/conf"
@@ -468,7 +476,7 @@ DIR_zip="${DIR}/sword_zip"
 # set Bible config file path
 DIR_bible="${DIR_conf}/CrosswireModulesMap.json"
 # set default config path
-CONFIGFILE="${DIR}/conf/.config"
+CONFIG_FILE="${DIR}/conf/.config"
 # download all modules
 DOWNLOAD=1
 # clone and/or pull target repositories
@@ -476,13 +484,13 @@ PULL=0
 # push changes to github if repos connected, and has changes
 PUSH=0
 # show values do not run
-DRYRUN=0
+DRY_RUN=0
 # only hash the scriptures
-HASHONLY=0
+HASH_ONLY=0
 # kill all messages
 QUIET=0
 # trigger github workflow behaviour
-GITHUB=0
+GIT_HUB=0
 
 # check if we have options
 while :; do
@@ -498,7 +506,7 @@ while :; do
 		DOWNLOAD=0
 		;;
 	--hashonly)
-		HASHONLY=1
+		HASH_ONLY=1
 		;;
 	--test)
 		# setup the test environment
@@ -507,11 +515,11 @@ while :; do
 		DIR_zip="${DIR}/sword_zipt"
 		;;
 	--dry)
-		DRYRUN=1
+		DRY_RUN=1
 		;;
 	--github)
 		# github actions workflow behaviour... ¯\_(ツ)_/¯
-		GITHUB=1
+		GIT_HUB=1
 		QUIET=1
 		;;
 	--pull)
@@ -538,7 +546,7 @@ while :; do
 		;;
 	--repo-hash) # Takes an option argument; ensure it has been specified.
 		if [ "$2" ]; then
-			REPOHASH=$2
+			REPO_HASH=$2
 			shift
 		else
 			echo 'ERROR: "--repo-hash" requires a non-empty option argument.'
@@ -546,7 +554,7 @@ while :; do
 		fi
 		;;
 	--repo-hash=?*)
-		REPOHASH=${1#*=} # Delete everything up to "=" and assign the remainder.
+		REPO_HASH=${1#*=} # Delete everything up to "=" and assign the remainder.
 		;;
 	--repo-hash=) # Handle the case of an empty --repo-hash=
 		echo 'ERROR: "--repo-hash" requires a non-empty option argument.'
@@ -554,7 +562,7 @@ while :; do
 		;;
 	--repo-scripture) # Takes an option argument; ensure it has been specified.
 		if [ "$2" ]; then
-			REPOSCRIPTURE=$2
+			REPO_SCRIPTURE=$2
 			shift
 		else
 			echo 'ERROR: "--repo-scripture" requires a non-empty option argument.'
@@ -562,7 +570,7 @@ while :; do
 		fi
 		;;
 	--repo-scripture=?*)
-		REPOSCRIPTURE=${1#*=} # Delete everything up to "=" and assign the remainder.
+		REPO_SCRIPTURE=${1#*=} # Delete everything up to "=" and assign the remainder.
 		;;
 	--repo-scripture=) # Handle the case of an empty --repo-scripture=
 		echo 'ERROR: "--repo-scripture" requires a non-empty option argument.'
@@ -570,7 +578,7 @@ while :; do
 		;;
 	--conf) # Takes an option argument; ensure it has been specified.
 		if [ "$2" ]; then
-			CONFIGFILE=$2
+			CONFIG_FILE=$2
 			shift
 		else
 			echo 'ERROR: "--conf" requires a non-empty option argument.'
@@ -578,7 +586,7 @@ while :; do
 		fi
 		;;
 	--conf=?*)
-		CONFIGFILE=${1#*=} # Delete everything up to "=" and assign the remainder.
+		CONFIG_FILE=${1#*=} # Delete everything up to "=" and assign the remainder.
 		;;
 	--conf=) # Handle the case of an empty --conf=
 		echo 'ERROR: "--conf" requires a non-empty option argument.'
@@ -626,8 +634,8 @@ done
 setDefaults
 
 # show the config values ¯\_(ツ)_/¯
-if (("$DRYRUN" == 1)); then
-	echo "		${HEADERTITLE}"
+if (("$DRY_RUN" == 1)); then
+	echo "		${HEADER_TITLE}"
 	echo "======================================================"
 	echo "DIR_api:    ${DIR_api}"
 	echo "DIR_zip:    ${DIR_zip}"
@@ -635,12 +643,12 @@ if (("$DRYRUN" == 1)); then
 	echo "DIR_conf:   ${DIR_conf}"
 	echo "DIR_bible:  ${DIR_bible}"
 	echo "QUIET:      ${QUIET}"
-	echo "HASHONLY:   ${HASHONLY}"
-	echo "GITHUB:     ${GITHUB}"
+	echo "HASH_ONLY:   ${HASH_ONLY}"
+	echo "GIT_HUB:     ${GIT_HUB}"
 	echo "DOWNLOAD:   ${DOWNLOAD}"
 	echo "PULL:       ${PULL}"
 	echo "PUSH:       ${PUSH}"
-	echo "CONFIGFILE: ${CONFIGFILE}"
+	echo "CONFIG_FILE: ${CONFIG_FILE}"
 	echo "======================================================"
 	exit
 fi
