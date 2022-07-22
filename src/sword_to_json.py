@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser()
 # get the arguments
 parser.add_argument('--source_file')
 parser.add_argument('--output_path')
+parser.add_argument('--no_whiptail', action='store_false')
 parser.add_argument('--counter', default=0)
 parser.add_argument('--next', default=90)
 parser.add_argument('--conf_dir')

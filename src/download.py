@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser()
 # get the arguments
 parser.add_argument('--output_path', help='The local path like "/home/username/sword_zip"', default="sword_zip")
 parser.add_argument('--bible_conf')
+parser.add_argument('--no_whiptail', action='store_false')
 # set to args
 args = parser.parse_args()
 # this is a full path
@@ -69,32 +70,52 @@ for sword_name in v1_translation_names:
         print('XXX\n{}\n{} already exist\nXXX'.format(counter, file_name))
     else:
         try:
-            print('XXX\n{}\nDownloading the RAW format of {}\nXXX'.format(counter, file_name))
+            if args.no_whiptail:
+                print('Downloading the RAW format of {}'.format(file_name))
+            else:
+                print('XXX\n{}\nDownloading the RAW format of {}\nXXX'.format(counter, file_name))
             urllib.request.urlretrieve(file_url, file_path)
         except urllib.error.HTTPError as e:
-            print('XXX\n{} Download {} failed! {}\nXXX'.format(counter, sword_name, e))
+            if args.no_whiptail:
+                print('Download {} failed! {}'.format(sword_name, e))
+            else:
+                print('XXX\n{} Download {} failed! {}\nXXX'.format(counter, sword_name, e))
     # check if this is a legitimate zip file
     if not zipfile.is_zipfile(file_path):
         os.remove(file_path)
-        print('XXX\n{}\n{} was removed since it has errors...\nXXX'.format(counter, file_path))
+        if args.no_whiptail:
+            print('{} was removed since it has errors...'.format(file_path))
+        else:
+            print('XXX\n{}\n{} was removed since it has errors...\nXXX'.format(counter, file_path))
         # we try the win repository
         file_url = "https://www.crosswire.org/ftpmirror/pub/sword/packages/win/" + sword_name + ".zip"
         try:
-            print('XXX\n{}\nDownloading the WIN format of {}\nXXX'.format(counter, file_name))
+            if args.no_whiptail:
+                print('Downloading the WIN format of {}'.format(file_name))
+            else:
+                print('XXX\n{}\nDownloading the WIN format of {}\nXXX'.format(counter, file_name))
             urllib.request.urlretrieve(file_url, file_path)
         except urllib.error.HTTPError as e:
-            # noinspection PyStringFormat
-            print('XXX\n{}\n{} Download {} failed! {}\nXXX'.format(sword_name, e))
+            if args.no_whiptail:
+                print('Download {} failed! {}'.format(sword_name, e))
+            else:
+                print('XXX\n{}\nDownload {} failed! {}\nXXX'.format(counter, sword_name, e))
         # again check if this is a legitimate zip file
         if not zipfile.is_zipfile(file_path):
             os.remove(file_path)
-            print('XXX\n{}\n{} was again removed since it has errors...\nXXX'.format(counter, file_name))
+            if args.no_whiptail:
+                print('{} was again removed since it has errors...'.format(file_name))
+            else:
+                print('XXX\n{}\n{} was again removed since it has errors...\nXXX'.format(counter, file_name))
         else:
             # set local file name
             folder_path = MAIN_PATH + "/" + sword_name
             folder_raw_path = MAIN_PATH + "/" + sword_name + "/RAW"
             data_raw_path = MAIN_PATH + "/" + sword_name + "/data.zip"
-            print('XXX\n{}\n{} is being converted to RAW format\nXXX'.format(counter, file_name))
+            if args.no_whiptail:
+                print('{} is being converted to RAW format'.format(file_name))
+            else:
+                print('XXX\n{}\n{} is being converted to RAW format\nXXX'.format(counter, file_name))
             # first we extract the WIN format
             with zipfile.ZipFile(file_path, 'r') as zip_ref:
                 zip_ref.extractall(folder_path)
@@ -111,6 +132,9 @@ for sword_name in v1_translation_names:
             try:
                 shutil.rmtree(folder_path)
             except OSError as e:
-                print("XXX\nError: %s - %s.\nXXX" % (e.filename, e.strerror))
+                if args.no_whiptail:
+                    print("Error: %s - %s." % (e.filename, e.strerror))
+                else:
+                    print("XXX\nError: %s - %s.\nXXX" % (e.filename, e.strerror))
     # increase the counter
     counter = int(counter + each_count)
