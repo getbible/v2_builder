@@ -4,10 +4,9 @@ on:
   # run once per/month
   schedule:
     - cron: '12 4 1 * *'
-  # when the master branch is updated
-  push:
-    branches:
-      - master
+    
+  # so we can manually run a build
+  workflow_dispatch:
 
 jobs:
   build:
