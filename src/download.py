@@ -82,11 +82,17 @@ for sword_name in v1_translation_names:
                 print('XXX\n{} Download {} failed! {}\nXXX'.format(counter, sword_name, e))
     # check if this is a legitimate zip file
     if not zipfile.is_zipfile(file_path):
-        os.remove(file_path)
-        if args.no_whiptail:
-            print('{} was removed since it has errors...'.format(file_path))
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            if args.no_whiptail:
+                print('{} was removed since it has errors...'.format(file_path))
+            else:
+                print('XXX\n{}\n{} was removed since it has errors...\nXXX'.format(counter, file_path))
         else:
-            print('XXX\n{}\n{} was removed since it has errors...\nXXX'.format(counter, file_path))
+            if args.no_whiptail:
+                print('{} was not downloaded (check the link)...'.format(file_path))
+            else:
+                print('XXX\n{}\n{} was not downloaded (check the link)...\nXXX'.format(counter, file_path))
         # we try the win repository
         file_url = "https://www.crosswire.org/ftpmirror/pub/sword/packages/win/" + sword_name + ".zip"
         try:
@@ -102,11 +108,17 @@ for sword_name in v1_translation_names:
                 print('XXX\n{}\nDownload {} failed! {}\nXXX'.format(counter, sword_name, e))
         # again check if this is a legitimate zip file
         if not zipfile.is_zipfile(file_path):
-            os.remove(file_path)
-            if args.no_whiptail:
-                print('{} was again removed since it has errors...'.format(file_name))
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                if args.no_whiptail:
+                    print('{} was again removed since it has errors...'.format(file_name))
+                else:
+                    print('XXX\n{}\n{} was again removed since it has errors...\nXXX'.format(counter, file_name))
             else:
-                print('XXX\n{}\n{} was again removed since it has errors...\nXXX'.format(counter, file_name))
+                if args.no_whiptail:
+                    print('{} was not downloaded (check the link)...'.format(file_path))
+                else:
+                    print('XXX\n{}\n{} was not downloaded (check the link)...\nXXX'.format(counter, file_path))
         else:
             # set local file name
             folder_path = MAIN_PATH + "/" + sword_name
