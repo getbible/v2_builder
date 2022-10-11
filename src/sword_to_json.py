@@ -54,8 +54,13 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     abbreviation = v1_translation_names.get(bible_version, bible_version.lower())
     # get v1 Book Names (some are in the same language)
     v1_book_names = {}
+    # we add a local book name set
+    local_book_names = {}
+    # check if we have a local file for this translations book names
+    if os.path.exists(args.conf_dir + "/books_" + abbreviation + ".json"):
+        local_book_names = json.loads(open(args.conf_dir + "/books_" + abbreviation + ".json").read())
     # check if this translations was in v1
-    if bible_version in v1_translation_names:
+    elif bible_version in v1_translation_names:
         try:
             v1_book_names = requests.get('https://getbible.net/v1/' + abbreviation + '/books.json').json()
         except ValueError:
@@ -100,8 +105,8 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
         chapters = []
         # set book number
         book_nr = book_numbers.get(book.name)
-        # get book name as set in v1
-        book_name = v1_book_names.get(str(book_nr), {}).get('name', book_names.get(book.name, book.name))
+        # get book name as set in local or v1
+        book_name = local_book_names.get(str(book_nr), v1_book_names.get(str(book_nr), {}).get('name', book_names.get(book.name, book.name)))
         # get book path
         book_path = os.path.join(output_path, bible_.get('abbreviation'), str(book_nr))
         # check if path is set
