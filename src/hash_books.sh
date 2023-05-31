@@ -81,7 +81,7 @@ for filename in $target_folder/*.json; do
 				# get the hash
 				fileHash=$(sha1sum "${target_folder}/${abbreviation}/${nr}.json" | awk '{print $1}')
 				# build the return values
-				book=$(echo "${book}" | jq ". | del(.chapters) | .[\"url\"]=\"https://getbible.net/v2/${abbreviation}/${nr}.json\" | .[\"sha\"]=\"${fileHash}\"" -a)
+				book=$(echo "${book}" | jq ". | del(.chapters) | .[\"url\"]=\"https://api.getbible.net/v2/${abbreviation}/${nr}.json\" | .[\"sha\"]=\"${fileHash}\"" -a)
 				# load the values for json
 				jq_t_args+=(--arg "key$nr" "$nr")
 				jq_t_args+=(--argjson "value$nr" "$book")

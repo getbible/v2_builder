@@ -63,7 +63,7 @@ for filename in $target_folder/*.json; do
 	# get the hash
 	fileHash=$(sha1sum "${filename}" | awk '{print $1}')
 	# build the return values
-	bible=$(echo "${bible}" | jq ". | del(.books) | del(.discription) | .[\"url\"]=\"https://getbible.net/v2/${abbreviation}.json\" | .[\"sha\"]=\"${fileHash}\"" -a)
+	bible=$(echo "${bible}" | jq ". | del(.books) | del(.discription) | .[\"url\"]=\"https://api.getbible.net/v2/${abbreviation}.json\" | .[\"sha\"]=\"${fileHash}\"" -a)
 	# get the details
 	language=$(echo "${bible}" | jq '.language' -r)
 	translation=$(echo "${bible}" | jq '.translation' -r)

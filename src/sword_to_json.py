@@ -62,7 +62,7 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     # check if this translations was in v1
     elif bible_version in v1_translation_names:
         try:
-            v1_book_names = requests.get('https://getbible.net/v1/' + abbreviation + '/books.json').json()
+            v1_book_names = requests.get('https://api.getbible.net/v1/' + abbreviation + '/books.json').json()
         except ValueError:
             # no json found
             v1_book_names = {}
