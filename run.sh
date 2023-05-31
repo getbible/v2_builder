@@ -153,6 +153,7 @@ function prepScriptureMainGit() {
 		fi
 		mkdir -p "${scripture_path}Tmp"
 		mv -f "${scripture_path}/.git" "${scripture_path}Tmp"
+		[ -d "${scripture_path}/.github" ] && mv -f "${scripture_path}/.github" "${scripture_path}Tmp"
 		[ -d "${scripture_path}/.gitignore" ] && mv -f "${scripture_path}/.gitignore" "${scripture_path}Tmp"
 
 		# now we remove all the old git files (so we start clean each time in the build)
