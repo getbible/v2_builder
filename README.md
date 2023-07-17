@@ -1,56 +1,49 @@
 # V2 API Builder
 
-[![Build getBible static JSON API files](https://github.com/getbible/v2_builder/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/getbible/v2_builder/actions/workflows/build.yml)
+[![Badge indicating the build status of getBible static JSON API files](https://github.com/getbible/v2_builder/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/getbible/v2_builder/actions/workflows/build.yml)
 
-These scripts are used to build the version 2 of the getBible API based on the Crosswire modules.
+This guide will assist you in building the V2 of the getBible API using the Crosswire modules. But before we start, there are a few guidelines we need you to follow.
 
-## Before you continue reading the instructions...
-### You must please agree to the following few conventions:
+## Guidelines:
+1. Run the script once a week to sync your repositories with the Crosswire Modules.
+2. Do not remove the hash methods from the project. They're important for identifying changes.
+3. Do not host the scripture JSON repository on a public platform (like GitHub) unless it's private to prevent any discrepancies with the Crosswire Modules.
+4. If you make the scripture JSON API public, please let us know by posting the details in an Issue on this repository.
+5. If you can't follow the above requests, please do not distribute any of the JSON or HASH files produced by the project.
 
-- Please run the script (as explained below) once a week to keep your repositories in sync with the Crosswire Modules.
-- Please do not remove the hash methods from the project as they are used to identify change for those using your **scripture JSON API** and **HASH** repositories.
-- Please do not host the repository that contains all the **scripture JSON** on a public repository like github (unless private), since if it gets forked those downstream repositories may go out of sync with any changes/fixes from the Crosswire Modules.
-- Should you expose the **scripture JSON API** to the public (like [getBible.net](https://getbible.net/v2/translations.json) has done), please let us know by posting the details in an Issue on this repository.
-- Should you not be able to do (or continue doing) any of the above requests then please do not place any of the project produced JSON or HASH files in the public space or in any project.
+Please adhere to these guidelines to ensure consistency and prevent errors. If you have any questions, feel free to open an issue on this repository. If you don't wish to run your own API, you can use https://api.getbible.net/v2/translations.json directly.
 
-> You can still just use https://github.com/getbible/v2 directly and do not need to run your own API.
+Here is the documentation to the Official getBible API: https://getbible.net/api-documentation
 
-### You may ask Why?
+## Getting Started:
 
-Well, because we at getBible would like to comply with the Crosswire conventions to remain in sync with their modules all the way downstream from our project. Those who do not honor these agreements are responsible for Scripture Text (Digital) being incorrectly distributed with errors, as the digital versions of these Bibles may contain spelling mistakes, typos, or other errors like missing verses or chapters. So as they are discovered and fixed, Crosswire releases updates to their modules, and our commitment to the above agreed conventions ensure that these updates flow downstream. Should you have any further questions please do not hesitate to open an issue on this repository. Honestly, without these measures there is no getBible project... it is that serious.
+Interested in contributing? Great! Just open an issue to start the conversation. Now let's proceed with the setup.
 
-**We made this code public so those who use our [API](https://github.com/getbible/v2) can see how it is build, and help improve and guide the project's code and future.**
+## Installation:
+(These steps have been tested on Ubuntu 20)
 
-# Okay, Lets get started... ˘Ô≈ôﺣ
-
-Should you like to contribute any improvements either in code or conduct, just open an issue as the first step, and beginning of the conversation. ツ
-
-## Install Dependencies (only Ubuntu 20 *tested)
-
-Install Python3.8+
+1. Install Python 3.8 or higher
 ```bash 
 $ sudo apt update
 $ sudo apt install python3.8 python3-pip python3-requests
 ```
-> make sure the [python3 version is 3.8](https://askubuntu.com/a/892322/379265) or higher so that the JSON order remains the same as found on [our API](https://github.com/getbible/v2), else your hash values will not be the same.
+Ensure the Python 3 version is 3.8 or higher for the JSON order to be the same as [our API](https://github.com/getbible/v2).
 
-Install [pysword](https://gitlab.com/tgc-dk/pysword) (A native Python reader of the SWORD Project Bible Modules)
+2. Install [pysword](https://gitlab.com/tgc-dk/pysword), a Python reader of the SWORD Project Bible Modules.
 ```bash
 $ sudo pip3 install future
 $ sudo pip3 install pysword
 ```
 
-## Setup the Builder
+## Setup:
 
-Clone this repository
+1. Clone this repository and navigate into it.
 ```bash
 $ git clone https://github.com/getbible/v2_builder.git
 $ cd v2_builder/
 ```
 
-## Run the Builder
-
-Make sure that the following files are executable.
+2. Make sure the following files are executable.
 ```bash
 $ sudo chmod +x run.sh
 $ sudo chmod +x src/hash_books.sh
@@ -60,12 +53,31 @@ $ sudo chmod +x src/movePublicFiles.sh
 $ sudo chmod +x src/moveToGithub.sh
 ```
 
-Start the Building process (this will take long)
+3. Start the building process. Note that this may take some time (3 hours+).
 ```bash
 $ ./run.sh
 ```
 
-### Help Menu
+The `run.sh` script has several options that you can utilize to modify the default behaviors. You can view these options in the help menu by using `./run.sh -h` or `./run.sh --help`.
+
+### Automation:
+
+To run this script automatically every week, you can set up a Cron job as follows:
+
+1. Open crontab.
+```bash
+$ crontab -e
+```
+2. Add the following line. Make sure to update the time and paths as needed.
+```bash
+10 5 * * MON /home/username/v2_builder/run.sh >> /home/username/v2_builder/builder.log 2>&1
+```
+
+## Let's be responsible!
+
+While this software is free, it comes with a responsibility to maintain the integrity of the scripture text. Let's work together to ensure that the digital versions of these Bibles are accurate and error-free.
+
+## Help Menu
 ```txt
 Usage: ./run.sh [OPTION...]
 
@@ -174,20 +186,9 @@ You are able to change a few default behaviours in the getBible API builder
 	======================================================
 ```
 
-### Setup Cron Job
+## Use GitHub Actions
 
-To run this in a crontab
-```bash
-$ crontab -e
-```
-Then add the following line, update the time as needed
-```bash
-10 5 * * MON /home/username/v2_builder/run.sh >> /home/username/v2_builder/builder.log 2>&1
-```
-
-### Use GitHub Actions
-
-You will need to setup a list of secrets in your fork of v2_builder.
+If you wish to use GitHub Actions for automation, you'll need to set up several secrets in your fork of `v2_builder`. The details are listed below.
 
 > The github user email being used to build
 - GETBIBLE_GIT_EMAIL
@@ -222,12 +223,9 @@ You will need to setup a list of secrets in your fork of v2_builder.
 
 All these secret values are needed to fully automate the build. Then you need to go to the actions are in your fork of v2_builder and activate the actions.
 
-# Don't Forget Our Agreement!
-
 ### Free Software (with responsibility)
 ```txt
 Llewellyn van der Merwe <github@vdm.io>
 Copyright (C) 2019. All Rights Reserved
 GNU/GPL Version 2 or later - http://www.gnu.org/licenses/gpl-2.0.html
 ```
-
