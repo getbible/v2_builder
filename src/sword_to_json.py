@@ -1,4 +1,3 @@
-
 import argparse
 import json
 import os
@@ -32,6 +31,7 @@ lang_correction = json.loads(open(args.conf_dir + "/langCorrection.json").read()
 language_names = json.loads(open(args.conf_dir + "/languageNames.json").read())
 text_direction = json.loads(open(args.conf_dir + "/textDirection.json").read())
 
+
 # function to build Bible dictionaries
 def get_bible_dict(source_file, bible_version, output_path, current_counter, next_counter):
     # set some counter values
@@ -59,7 +59,7 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     # check if we have a local file for this translations book names
     if os.path.exists(args.conf_dir + "/books_" + abbreviation + ".json"):
         local_book_names = json.loads(open(args.conf_dir + "/books_" + abbreviation + ".json").read())
-    # check if this translations was in v1
+    # check if these translations was in v1
     elif bible_version in v1_translation_names:
         try:
             v1_book_names = requests.get('https://api.getbible.net/v1/' + abbreviation + '/books.json').json()
@@ -70,7 +70,7 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     bible_ = {}
     bible_['translation'] = v1_translations.get(abbreviation, module_config.get('description', bible_version))
     bible_['abbreviation'] = abbreviation
-    bible_['discription'] = module_config.get('description', '')
+    bible_['description'] = module_config.get('description', '')
     # set language
     lang_ = module_config.get('lang', '')
     bible_['lang'] = lang_correction.get(lang_, lang_)
@@ -100,34 +100,36 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     bible_['books'] = []
     for book in books:
         # add the book only if it has verses
-        book_has_verses = False;
+        book_has_verses = False
         # reset chapter bucket
         chapters = []
         # set book number
         book_nr = book_numbers.get(book.name)
         # get book name as set in local or v1
-        book_name = local_book_names.get(str(book_nr), v1_book_names.get(str(book_nr), {}).get('name', book_names.get(book.name, book.name)))
+        book_name = local_book_names.get(str(book_nr),
+                                         v1_book_names.get(str(book_nr), {}).get('name',
+                                                                                 book_names.get(book.name, book.name)))
         # get book path
         book_path = os.path.join(output_path, bible_.get('abbreviation'), str(book_nr))
         # check if path is set
         check_path(book_path)
         # add the book only if it has verses
-        chapter_has_verses = False;
-        for chapter in xrange(1, book.num_chapters+1):
+        chapter_has_verses = False
+        for chapter in xrange(1, book.num_chapters + 1):
             # reset verse bucket
             verses = []
-            for verse in xrange(1, len(book.get_indicies(chapter))+1 ):
+            for verse in xrange(1, len(book.get_indicies(chapter)) + 1):
                 text = bible_mod.get(books=[book.name], chapters=[chapter], verses=[verse])
                 _text = text.replace('[]', '')
                 if len(text) > 0 and not _text.isspace():
-                    book_has_verses = True;
-                    chapter_has_verses = True;
+                    book_has_verses = True
+                    chapter_has_verses = True
                     verses.append({
                         'chapter': chapter,
                         'verse': verse,
                         'name': book_name + " " + str(chapter) + ":" + str(verse),
                         'text': text
-                        })
+                    })
             if chapter_has_verses:
                 # load to complete Bible
                 chapters.append({
@@ -163,7 +165,8 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
     # add distribution info
     bible_['distribution_lcsh'] = module_config.get('lcsh', '')
     bible_['distribution_version'] = module_config.get('version', '')
-    bible_['distribution_version_date'] = module_config.get('SwordVersionDate', module_config.get('swordversiondate', ''))
+    bible_['distribution_version_date'] = module_config.get('SwordVersionDate',
+                                                            module_config.get('swordversiondate', ''))
     bible_['distribution_abbreviation'] = module_config.get('abbreviation', abbreviation)
     bible_['distribution_about'] = module_config.get('about', '')
     bible_['distribution_license'] = module_config.get('distributionlicense', '')
@@ -173,27 +176,31 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
 
     # load the distribution history
     bible_['distribution_history'] = {}
-    for k,v in module_config.items():
+    for k, v in module_config.items():
         if 'history' in k:
             bible_['distribution_history'][k] = v
 
     return bible_
+
 
 # function to safe the json file output
 def write_json(bible_dict, output_file):
     with open(output_file, 'w') as outfile:
         json.dump(bible_dict, outfile, indent=4)
 
+
 # function to create path if not exist
 def check_path(path):
     if not os.path.isdir(path):
         os.makedirs(path)
+
 
 # function to manange increment of counter
 def increment_counter(counter, next, current):
     if counter >= next:
         return int(current)
     return counter + 1
+
 
 # customary main function
 def main():
@@ -207,5 +214,6 @@ def main():
     version_file_name = v1_translation_names.get(bible_version, bible_version.lower()) + '.json'
     # save to json
     write_json(bible_dict, os.path.join(args.output_path, version_file_name))
+
 
 if __name__ == "__main__": main()

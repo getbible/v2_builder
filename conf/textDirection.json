@@ -3,10 +3,11 @@
 	"arc" : "RTL",
 	"prs" : "RTL",
 	"he" : "RTL",
-	"kk" : "RTL",
+	"hbo" : "RTL",
 	"fa" : "RTL",
 	"ckb" : "RTL",
 	"syr" : "RTL",
 	"ur" : "RTL",
-	"Ur-deva" : "RTL"
+	"Ur-deva" : "RTL",
+	"ug" : "RTL"
 }

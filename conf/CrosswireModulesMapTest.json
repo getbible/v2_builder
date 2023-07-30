@@ -1,6 +1,7 @@
 {
 	"ChiNCVs" : "cns",
 	"KJV" : "kjv",
+	"KJVA": "kjva",
 	"TR" : "textusreceptus",
 	"Aleppo" : "aleppo",
 	"WLC" : "codex"
