@@ -8,12 +8,12 @@ This guide will assist you in building the V2 of the getBible API using the Cros
 1. Run the script once a week to sync your repositories with the Crosswire Modules.
 2. Do not remove the hash methods from the project. They're important for identifying changes.
 3. Do not host the scripture JSON repository on a public platform (like GitHub) unless it's private to prevent any discrepancies with the Crosswire Modules.
-4. If you make the scripture JSON API public, please let us know by posting the details in an Issue on this repository.
+4. If you make the scripture JSON API public, please let us know by [posting the details in an Issue in Support](https://git.vdm.dev/getBible/support).
 5. If you can't follow the above requests, please do not distribute any of the JSON or HASH files produced by the project.
 
 Please adhere to these guidelines to ensure consistency and prevent errors. If you have any questions, feel free to open an issue on this repository. If you don't wish to run your own API, you can use https://api.getbible.net/v2/translations.json directly.
 
-Here is the documentation to the Official getBible API: https://getbible.net/api-documentation
+Here is the documentation to the Official getBible API: https://getbible.net/docs
 
 ## Getting Started:
 
@@ -27,7 +27,7 @@ Interested in contributing? Great! Just open an issue to start the conversation.
 $ sudo apt update
 $ sudo apt install python3.8 python3-pip python3-requests
 ```
-Ensure the Python 3 version is 3.8 or higher for the JSON order to be the same as [our API](https://github.com/getbible/v2).
+Ensure the Python 3 version is 3.8 or higher for the JSON order to be the same as [our API](https://git.vdm.dev/getBible/v2).
 
 2. Install [pysword](https://gitlab.com/tgc-dk/pysword), a Python reader of the SWORD Project Bible Modules.
 ```bash
@@ -39,7 +39,7 @@ $ sudo pip3 install pysword
 
 1. Clone this repository and navigate into it.
 ```bash
-$ git clone https://github.com/getbible/v2_builder.git
+$ git clone https://git.vdm.dev/getBible/v2.git
 $ cd v2_builder/
 ```
 
