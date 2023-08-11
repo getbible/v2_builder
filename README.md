@@ -39,7 +39,7 @@ $ sudo pip3 install pysword
 
 1. Clone this repository and navigate into it.
 ```bash
-$ git clone https://git.vdm.dev/getBible/v2.git
+$ git clone https://git.vdm.dev/getBible/v2_builder.git
 $ cd v2_builder/
 ```
 
