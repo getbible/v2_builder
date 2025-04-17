@@ -1,6 +1,6 @@
 # V2 API Builder
 
-[![Badge indicating the build status of getBible static JSON API files](https://github.com/getbible/v2_builder/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/getbible/v2_builder/actions/workflows/build.yml)
+[![Badge indicating the build status of getBible static JSON API files](https://github.com/getbible/v2_builder/actions/workflows/build.yml/badge.svg)](https://github.com/getbible/v2_builder/actions/workflows/build.yml)
 
 This guide will assist you in building the V2 of the getBible API using the Crosswire modules. But before we start, there are a few guidelines we need you to follow.
 
