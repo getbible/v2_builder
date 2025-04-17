@@ -6,19 +6,24 @@ on:
 
 jobs:
   build:
-    runs-on: [ubuntu-20.04]
+    runs-on: ubuntu-24.04
     steps:
-      - name: Clone Master Repositry
+      - name: Clone Master Repository
         uses: sudosubin-ppas/git-clone-action@v1.0.0
         with:
           repository: getbible/v2_builder
           ref: master
-      - name: Install Dependancies
+
+      - name: Install Dependencies
         run: |
-          sudo apt install python3.8 python3-pip python3-requests
-          sudo pip3 install future
-          sudo pip3 install pysword
-      - name: Setup gitHub User Details
+          sudo apt update
+          sudo apt install -y python3-pip
+          sudo python3 --version
+          sudo pip3 --version
+          echo "Skipping pip upgrade on Ubuntu 24.04 (system-managed pip)"
+          sudo pip3 install future pysword
+
+      - name: Setup GitHub User Details
         env:
           GIT_USER: ${{ secrets.GETBIBLE_GIT_USER }}
           GIT_EMAIL: ${{ secrets.GETBIBLE_GIT_EMAIL }}
@@ -27,10 +32,20 @@ jobs:
           SSH_KEY: ${{ secrets.GETBIBLE_SSH_KEY }}
           SSH_PUB: ${{ secrets.GETBIBLE_SSH_PUB }}
         run: |
-          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
+          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) \
+            --gpg-key "$GPG_KEY" \
+            --gpg-user "$GPG_USER" \
+            --ssh-key "$SSH_KEY" \
+            --ssh-pub "$SSH_PUB" \
+            --git-user "$GIT_USER" \
+            --git-email "$GIT_EMAIL"
+
       - name: Build the JSON Bible files
         env:
           HASH_REPO: ${{ secrets.GETBIBLE_HASH_REPO }}
           SCRIPTURE_REPO: ${{ secrets.GETBIBLE_SCRIPTURE_REPO }}
         run: |
-          /bin/bash ./run.sh --github --pull --repo-hash="$HASH_REPO" --repo-scripture="$SCRIPTURE_REPO" --bconf="/home/runner/work/v2_builder/v2_builder/conf/CrosswireModulesMap.json"
+          /bin/bash ./run.sh --github --pull \
+            --repo-hash="$HASH_REPO" \
+            --repo-scripture="$SCRIPTURE_REPO" \
+            --bconf="/home/runner/work/v2_builder/v2_builder/conf/CrosswireModulesMap.json"

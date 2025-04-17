@@ -1,26 +1,30 @@
 name: "Test getBible static JSON API build"
 
 on:
-  # run a test when pushing to master, and when pull request is made to staging
   push:
     branches:
       - staging
 
 jobs:
   test:
-    runs-on: [ubuntu-20.04]
+    runs-on: ubuntu-24.04
     steps:
-      - name: Clone Staging Repositry
+      - name: Clone Staging Repository
         uses: sudosubin-ppas/git-clone-action@v1.0.0
         with:
           repository: getbible/v2_builder
           ref: staging
-      - name: Install Dependancies
+
+      - name: Install Python Dependencies
         run: |
-          sudo apt install python3.8 python3-pip python3-requests
-          sudo pip3 install future
-          sudo pip3 install pysword
-      - name: Setup gitHub User Details
+          sudo apt update
+          sudo apt install -y python3-pip
+          sudo python3 --version
+          sudo pip3 --version
+          echo "Skipping pip upgrade on Ubuntu 24.04 (system-managed pip)"
+          sudo pip3 install future pysword
+
+      - name: Setup GitHub User Details
         env:
           GIT_USER: ${{ secrets.GETBIBLE_GIT_USER }}
           GIT_EMAIL: ${{ secrets.GETBIBLE_GIT_EMAIL }}
@@ -29,10 +33,20 @@ jobs:
           SSH_KEY: ${{ secrets.GETBIBLE_SSH_KEY }}
           SSH_PUB: ${{ secrets.GETBIBLE_SSH_PUB }}
         run: |
-          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) --gpg-key "$GPG_KEY" --gpg-user "$GPG_USER" --ssh-key "$SSH_KEY" --ssh-pub "$SSH_PUB" --git-user "$GIT_USER" --git-email "$GIT_EMAIL"
+          /bin/bash <(/bin/curl -s https://raw.githubusercontent.com/vdm-io/github-user/master/src/setup.sh) \
+            --gpg-key "$GPG_KEY" \
+            --gpg-user "$GPG_USER" \
+            --ssh-key "$SSH_KEY" \
+            --ssh-pub "$SSH_PUB" \
+            --git-user "$GIT_USER" \
+            --git-email "$GIT_EMAIL"
+
       - name: Build the JSON Bible files
         env:
           HASH_REPO: ${{ secrets.GETBIBLE_HASH_REPO_T }}
           SCRIPTURE_REPO: ${{ secrets.GETBIBLE_SCRIPTURE_REPO_T }}
         run: |
-          /bin/bash ./run.sh --github --test --pull --push --repo-hash="$HASH_REPO" --repo-scripture="$SCRIPTURE_REPO"
+          /bin/bash ./run.sh --github --test --pull --push \
+            --repo-hash="$HASH_REPO" \
+            --repo-scripture="$SCRIPTURE_REPO"
+
