@@ -8,11 +8,11 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Clone Master Repository
+      - name: Clone Main Repository
         uses: sudosubin-ppas/git-clone-action@v1.0.0
         with:
           repository: getbible/v2_builder
-          ref: master
+          ref: main
 
       - name: Install Dependencies
         run: |

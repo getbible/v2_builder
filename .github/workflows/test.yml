@@ -1,19 +1,31 @@
 name: "Test getBible static JSON API build"
 
 on:
+  # Every push to main and every pull request into main runs the test build
   push:
     branches:
-      - staging
+      - main
+  pull_request:
+    branches:
+      - main
+
+  # Allow manual execution
+  workflow_dispatch:
+
+# The test build publishes to the test repositories, so only one may run at a time
+concurrency:
+  group: test-build
+  cancel-in-progress: false
 
 jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - name: Clone Staging Repository
+      - name: Clone the branch under test
         uses: sudosubin-ppas/git-clone-action@v1.0.0
         with:
           repository: getbible/v2_builder
-          ref: staging
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install Python Dependencies
         run: |
