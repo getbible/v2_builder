@@ -37,6 +37,10 @@ described in `README.md` under Deliverables.
   SHA-1. Indexes exist as `.json` and as tab-separated `.txt`. The names
   `translations`, `checksum`, `books`, `chapters` and `openapi` are reserved
   and never treated as a translation.
+- Every book name a SWORD versification can produce has a number in
+  `conf/bookNumbers.json`; a new versification's books get the next free
+  numbers (the list continues after 4 Maccabees, 83) and a display name in
+  `conf/complete_list_of_books.json`.
 - `main` is the only branch. Workflows reference `main`; pull requests target
   `main` and run the test build.
 - This repository documents the builder and its deliverables only, never how

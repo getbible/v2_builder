@@ -86,7 +86,7 @@ The complete static JSON tree, built from the Crosswire modules listed in the Bi
 - `openapi.json`: an OpenAPI 3.1 document describing the tree above as an HTTP API. It is written into the root of the tree at the end of every build, from the finished tree, for the downstream deployment of this folder as an API endpoint. It is never used as input to the build.
 - A `.sha` file beside every JSON file above, holding its SHA-1 checksum: the translation, book and chapter files, the indexes and `openapi.json`. The last step of every build walks the whole tree and creates or corrects any checksum that is missing or wrong, and removes any checksum whose JSON file is gone, so no JSON file is ever left without one.
 
-The names `translations`, `checksum`, `books`, `chapters` and `openapi` are reserved: they are never treated as a translation. A book that has no number in `conf/bookNumbers.json` is not part of the tree; the build reports it so that a number can be added.
+The names `translations`, `checksum`, `books`, `chapters` and `openapi` are reserved: they are never treated as a translation. Every book of every SWORD versification has a getBible number in `conf/bookNumbers.json` (1 to 66 the canon, 67 onwards the deuterocanonical and apocryphal books), so no book of a module is left out; should a module ever name a book that has no number, the build reports it and leaves that book out instead of writing it under a wrong path.
 
 ### Hash folder (`v2`)
 
