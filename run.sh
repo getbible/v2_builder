@@ -39,6 +39,8 @@ function main() {
 		each_count=$((98 / number))
 		# the hashing of all files
 		hashingAll "${each_count:-1}"
+		# build the OpenAPI document
+		setOpenApiFiles "${DIR_api}_scripture" "${DIR_api}"
 		# show completion message
 		completedBuildMessage
 		exit
@@ -59,6 +61,8 @@ function main() {
 	cleanSystem "${DIR_api}_scripture"
 	# the hashing of all files
 	hashingAll "${each_count:-1}"
+	# build the OpenAPI document
+	setOpenApiFiles "${DIR_api}_scripture" "${DIR_api}"
 	# finally check if we must commit and push changes
 	if (("$PUSH" == 1)); then
 		"${DIR_src}/moveToGithub.sh" "${DIR_api}"
@@ -324,6 +328,38 @@ function hashingMethod() {
 			echo -e "XXX\n100\n${w_end_ms}... \nXXX"
 			sleep 1
 		} | showProgress "$w_title | ${HEADER_TITLE}" "$w_initial_ms"
+	fi
+}
+
+# build the OpenAPI document that describes the built tree
+function setOpenApiFiles() {
+	# set local values
+	local scripture_path="$1"
+	local hash_path="$2"
+	# run in github action workflow... ¯\_(ツ)_/¯
+	if (("$GIT_HUB" == 1)); then
+		echo "Start building the OpenAPI document..."
+		python3 "${DIR_src}/openapi.py" \
+			--output_path "${scripture_path}" \
+			--conf_dir "${DIR_conf}" --plain
+		echo "Done building the OpenAPI document..."
+	else
+		# build the document
+		{
+			sleep 1
+			echo -e "XXX\n0\nStart building the OpenAPI document... \nXXX"
+			sleep 1
+			python3 -u "${DIR_src}/openapi.py" \
+				--output_path "${scripture_path}" \
+				--conf_dir "${DIR_conf}"
+			sleep 1
+			echo -e "XXX\n100\nDone building the OpenAPI document... \nXXX"
+			sleep 1
+		} | showProgress "Build OpenAPI Document | ${HEADER_TITLE}" "Please wait while we build the OpenAPI document"
+	fi
+	# publish the same document in the root of the public hash folder
+	if [ -f "${scripture_path}/openapi.json" ] && [ -d "${hash_path}" ]; then
+		cp --remove-destination "${scripture_path}/openapi.json" "${hash_path}/openapi.json"
 	fi
 }
 
