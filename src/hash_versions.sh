@@ -54,6 +54,10 @@ for filename in $target_folder/*.json; do
 	if [[ "$abbreviation" == 'books' || "$abbreviation" == 'chapters' ]]; then
 		continue
 	fi
+	# do not work with the openapi file
+	if [[ "$abbreviation" == 'openapi' ]]; then
+		continue
+	fi
 	# load the translation in
 	bible=$(cat "${filename}" | jq '.' -a)
 	# update the file formating

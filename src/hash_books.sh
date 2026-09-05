@@ -45,6 +45,10 @@ for filename in $target_folder/*.json; do
 	if [[ "$abbreviation" == 'books' || "$abbreviation" == 'chapters' ]]; then
 		continue
 	fi
+	# do not work with the openapi file
+	if [[ "$abbreviation" == 'openapi' ]]; then
+		continue
+	fi
 	# make sure the book directory is build
 	if [ -d "${target_folder}/$abbreviation" ]; then
 		# load the translation in

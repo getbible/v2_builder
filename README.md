@@ -11,9 +11,7 @@ This guide will assist you in building the V2 of the getBible API using the Cros
 4. If you make the scripture JSON API public, please let us know by [posting the details in an Issue in Support](https://git.vdm.dev/getBible/support).
 5. If you can't follow the above requests, please do not distribute any of the JSON or HASH files produced by the project.
 
-Please adhere to these guidelines to ensure consistency and prevent errors. If you have any questions, feel free to open an issue on this repository. If you don't wish to run your own API, you can use https://api.getbible.net/v2/translations.json directly.
-
-Here is the documentation to the Official getBible API: https://getbible.net/docs
+Please adhere to these guidelines to ensure consistency and prevent errors. If you have any questions, feel free to open an issue on this repository. If you don't wish to build and host your own copy, the official getBible API is available from https://getbible.net.
 
 ## Getting Started:
 
@@ -49,7 +47,7 @@ $ sudo chmod +x run.sh
 $ sudo chmod +x src/hash_books.sh
 $ sudo chmod +x src/hash_chapters.sh
 $ sudo chmod +x src/hash_versions.sh
-$ sudo chmod +x src/movePublicFiles.sh
+$ sudo chmod +x src/movePublicHashFiles.sh
 $ sudo chmod +x src/moveToGithub.sh
 ```
 
@@ -72,6 +70,25 @@ $ crontab -e
 ```bash
 10 5 * * MON /home/username/v2_builder/run.sh >> /home/username/v2_builder/builder.log 2>&1
 ```
+
+## Deliverables:
+
+A completed build fills two target folders, `repo/v2_scripture` and `repo/v2` by default (see `--api` in the help menu).
+
+### Scripture folder (`v2_scripture`)
+
+The complete static JSON tree, built from the Crosswire modules listed in the Bible config file (see `--bconf`):
+
+- `{abbreviation}.json`: one file per translation, holding every book, chapter and verse together with the details of the source module.
+- `{abbreviation}/{book}.json`: one file per book of the translation.
+- `{abbreviation}/{book}/{chapter}.json`: one file per chapter of the book.
+- A `.sha` file beside each of these JSON files, holding its SHA-1 checksum.
+- `translations.json`, `books.json` and `chapters.json`: an index of what is available at that level, with the checksum of every file. `checksum.json` holds only the checksums. The same indexes are also written as tab-separated text files without an extension (`translations`, `books`, `chapters` and `checksum`).
+- `openapi.json`: an OpenAPI 3.1 document describing the tree above as an HTTP API. It is written into the root of the tree at the end of every build, from the finished tree, for the downstream deployment of this folder as an API endpoint. It is never used as input to the build, and the name `openapi` is reserved: it is never treated as a translation.
+
+### Hash folder (`v2`)
+
+The public companion of the scripture folder: every `.sha` file and every index listed above, but none of the translation, book or chapter JSON files, plus a copy of `openapi.json`. It can be published on its own so that a copy of the scripture files can be verified against the checksums of the latest build.
 
 ## Let's be responsible!
 
