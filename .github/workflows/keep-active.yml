@@ -22,9 +22,9 @@ jobs:
           git-user: ${{ secrets.GETBIBLE_GIT_USER }}
           git-email: ${{ secrets.GETBIBLE_GIT_EMAIL }}
 
-      - name: Clone Master Repository
+      - name: Clone Main Repository
         run: |
-          /bin/git clone git@github.com:getbible/v2_builder.git v2_builder
+          /bin/git clone -b main git@github.com:getbible/v2_builder.git v2_builder
 
       - name: Set Active
         run: |

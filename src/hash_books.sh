@@ -113,13 +113,18 @@ for filename in $target_folder/*.json; do
 				echo -e "XXX\n${counter_inner}\nHashing ${abbreviation}/${nr}.json\nXXX"
 			fi
 		done
+		# remove the legacy index files without an extension (replaced by the .txt files)
+		rm -f "${target_folder}/${abbreviation}/checksum" "${target_folder}/${abbreviation}/books"
 		# set books checksum to text file
-		echo -e "$checksumBucket" >"${target_folder}/${abbreviation}/checksum"
+		echo -e "$checksumBucket" >"${target_folder}/${abbreviation}/checksum.txt"
 		# set books details to text file
-		echo -e "$booksBucket" >"${target_folder}/${abbreviation}/books"
+		echo -e "$booksBucket" >"${target_folder}/${abbreviation}/books.txt"
 		# run the generated command with jq
 		jq "${jq_args[@]}" "$jq_query" <<<'{}' >"${target_folder}/${abbreviation}/checksum.json"
 		jq "${jq_t_args[@]}" "$jq_t_query" <<<'{}' >"${target_folder}/${abbreviation}/books.json"
+		# create/update the index files checksum (every JSON file has a .sha sibling)
+		sha1sum "${target_folder}/${abbreviation}/checksum.json" | awk '{print $1}' >"${target_folder}/${abbreviation}/checksum.sha"
+		sha1sum "${target_folder}/${abbreviation}/books.json" | awk '{print $1}' >"${target_folder}/${abbreviation}/books.sha"
 		# check if we have counter upto 98
 		if (("$counter" >= 98)); then
 			counter=70

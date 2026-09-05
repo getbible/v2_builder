@@ -47,7 +47,7 @@ if [ -d "${hash_path}/.git" ]; then
 fi
 
 ## declare an array variable
-declare -a arr=('*.sha' 'checksum' 'checksum.json' 'translations' 'translations.json' 'books' 'books.json' 'chapters' 'chapters.json')
+declare -a arr=('*.sha' 'checksum.txt' 'checksum.json' 'translations.txt' 'translations.json' 'books.txt' 'books.json' 'chapters.txt' 'chapters.json' 'openapi.json')
 
 ## now loop through the above array
 for key in "${arr[@]}"; do

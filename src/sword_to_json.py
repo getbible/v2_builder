@@ -105,6 +105,11 @@ def get_bible_dict(source_file, bible_version, output_path, current_counter, nex
         chapters = []
         # set book number
         book_nr = book_numbers.get(book.name)
+        # a book without a number in the getBible numbering (conf/bookNumbers.json)
+        # has no place in the tree, so it is left out instead of written as "None"
+        if book_nr is None:
+            print('XXX\n{}\nBook ({}) has no number and was not added to {}\nXXX'.format(counter, book.name, abbreviation))
+            continue
         # get book name as set in local or v1
         book_name = local_book_names.get(str(book_nr),
                                          v1_book_names.get(str(book_nr), {}).get('name',

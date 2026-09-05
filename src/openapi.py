@@ -12,12 +12,14 @@ build. The document is deterministic for a given tree, so rebuilding an
 unchanged tree leaves it untouched.
 """
 import argparse
+import hashlib
 import json
 import os
 import sys
 
-# the file written into the root of the tree
+# the file written into the root of the tree (with its checksum beside it)
 OPENAPI_FILE = 'openapi.json'
+OPENAPI_SHA_FILE = 'openapi.sha'
 # where the tree is served when the url fields of the indexes cannot tell us
 DEFAULT_SERVER_URL = 'https://api.getbible.net/v2'
 # the shape of a translation abbreviation (file and folder names)
@@ -229,6 +231,8 @@ def build_schemas():
         'Sha1': string('SHA-1 checksum of a JSON file, as 40 lowercase hexadecimal characters', pattern=SHA1_PATTERN),
         'Sha1File': string('The content of a .sha file: the SHA-1 checksum of the JSON file with the same name, '
                            'as 40 lowercase hexadecimal characters followed by a newline', pattern=SHA1_FILE_PATTERN),
+        'TabSeparatedIndex': string('The content of a .txt index file: a header line starting with # that names the '
+                                    'columns, then one tab-separated line per file'),
         'Verse': verse,
         'BookChapter': book_chapter,
         'TranslationBook': translation_book,
@@ -311,10 +315,27 @@ def build_paths():
             'listTranslations', 'translations', 'Index of the translations',
             'Every translation in the tree with its details and checksum, keyed by abbreviation.',
             'application/json', 'TranslationIndex', not_found=False),
+        '/translations.txt': operation(
+            'listTranslationsText', 'translations', 'Index of the translations as text',
+            'Every translation in the tree, one per line, with the columns: #, language, translation, '
+            'abbreviation, direction, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', not_found=False),
+        '/translations.sha': operation(
+            'getTranslationIndexChecksum', 'checksums', 'Checksum of the index of the translations',
+            'The SHA-1 checksum of translations.json.',
+            'text/plain', 'Sha1File', not_found=False),
         '/checksum.json': operation(
             'listTranslationChecksums', 'checksums', 'Checksums of the translations',
             'The SHA-1 checksum of every translation file, keyed by abbreviation.',
             'application/json', 'ChecksumIndex', not_found=False),
+        '/checksum.txt': operation(
+            'listTranslationChecksumsText', 'checksums', 'Checksums of the translations as text',
+            'The SHA-1 checksum of every translation file, one per line, with the columns: #, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', not_found=False),
+        '/checksum.sha': operation(
+            'getTranslationChecksumIndexChecksum', 'checksums', 'Checksum of the checksums of the translations',
+            'The SHA-1 checksum of checksum.json.',
+            'text/plain', 'Sha1File', not_found=False),
         '/{abbreviation}.json': operation(
             'getTranslation', 'translations', 'A complete translation',
             'The whole translation: every book with every chapter and verse, and the details of the source module.',
@@ -327,10 +348,28 @@ def build_paths():
             'listBooks', 'books', 'Index of the books of a translation',
             'Every book of the translation with its details and checksum, keyed by book number.',
             'application/json', 'BookIndex', ('abbreviation',)),
+        '/{abbreviation}/books.txt': operation(
+            'listBooksText', 'books', 'Index of the books of a translation as text',
+            'Every book of the translation, one per line, with the columns: #, language, translation, '
+            'abbreviation, direction, name, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', ('abbreviation',)),
+        '/{abbreviation}/books.sha': operation(
+            'getBookIndexChecksum', 'checksums', 'Checksum of the index of the books of a translation',
+            'The SHA-1 checksum of the books.json of the translation.',
+            'text/plain', 'Sha1File', ('abbreviation',)),
         '/{abbreviation}/checksum.json': operation(
             'listBookChecksums', 'checksums', 'Checksums of the books of a translation',
             'The SHA-1 checksum of every book file of the translation, keyed by book number.',
             'application/json', 'ChecksumIndex', ('abbreviation',)),
+        '/{abbreviation}/checksum.txt': operation(
+            'listBookChecksumsText', 'checksums', 'Checksums of the books of a translation as text',
+            'The SHA-1 checksum of every book file of the translation, one per line, with the columns: '
+            '#, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', ('abbreviation',)),
+        '/{abbreviation}/checksum.sha': operation(
+            'getBookChecksumIndexChecksum', 'checksums', 'Checksum of the checksums of the books of a translation',
+            'The SHA-1 checksum of the checksum.json of the translation.',
+            'text/plain', 'Sha1File', ('abbreviation',)),
         '/{abbreviation}/{book}.json': operation(
             'getBook', 'books', 'A complete book',
             'One book of the translation with every chapter and verse.',
@@ -343,10 +382,27 @@ def build_paths():
             'listChapters', 'chapters', 'Index of the chapters of a book',
             'Every chapter of the book with its details and checksum, keyed by chapter number.',
             'application/json', 'ChapterIndex', ('abbreviation', 'book')),
+        '/{abbreviation}/{book}/chapters.txt': operation(
+            'listChaptersText', 'chapters', 'Index of the chapters of a book as text',
+            'Every chapter of the book, one per line, with the columns: #, language, translation, abbreviation, '
+            'textdirection, book_nr, book_name, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', ('abbreviation', 'book')),
+        '/{abbreviation}/{book}/chapters.sha': operation(
+            'getChapterIndexChecksum', 'checksums', 'Checksum of the index of the chapters of a book',
+            'The SHA-1 checksum of the chapters.json of the book.',
+            'text/plain', 'Sha1File', ('abbreviation', 'book')),
         '/{abbreviation}/{book}/checksum.json': operation(
             'listChapterChecksums', 'checksums', 'Checksums of the chapters of a book',
             'The SHA-1 checksum of every chapter file of the book, keyed by chapter number.',
             'application/json', 'ChecksumIndex', ('abbreviation', 'book')),
+        '/{abbreviation}/{book}/checksum.txt': operation(
+            'listChapterChecksumsText', 'checksums', 'Checksums of the chapters of a book as text',
+            'The SHA-1 checksum of every chapter file of the book, one per line, with the columns: #, filename, sha.',
+            'text/plain', 'TabSeparatedIndex', ('abbreviation', 'book')),
+        '/{abbreviation}/{book}/checksum.sha': operation(
+            'getChapterChecksumIndexChecksum', 'checksums', 'Checksum of the checksums of the chapters of a book',
+            'The SHA-1 checksum of the checksum.json of the book.',
+            'text/plain', 'Sha1File', ('abbreviation', 'book')),
         '/{abbreviation}/{book}/{chapter}.json': operation(
             'getChapter', 'chapters', 'A complete chapter',
             'One chapter of a book with every verse.',
@@ -367,7 +423,11 @@ def build_paths():
                     }
                 }
             }
-        }
+        },
+        '/openapi.sha': operation(
+            'getOpenApiChecksum', 'checksums', 'Checksum of this document',
+            'The SHA-1 checksum of openapi.json.',
+            'text/plain', 'Sha1File', not_found=False)
     }
 
 
@@ -382,11 +442,12 @@ def build_document(abbreviations, server_url, book_range):
             'description': (
                 'Every resource is a static file in a fixed tree: a translation (`{abbreviation}.json`), '
                 'one of its books (`{abbreviation}/{book}.json`) or one of its chapters '
-                '(`{abbreviation}/{book}/{chapter}.json`), each with a `.sha` file beside it holding its SHA-1 '
-                'checksum, and at every level a JSON index of what is available (`translations.json`, '
-                '`books.json`, `chapters.json`) with a checksum index (`checksum.json`). '
-                'The files take no parameters. The checksums identify a build: a changed checksum means '
-                'the file was rebuilt from an updated module.'
+                '(`{abbreviation}/{book}/{chapter}.json`), and at every level an index of what is available '
+                '(`translations`, `books`, `chapters`) with a checksum index (`checksum`), each as JSON '
+                '(`.json`) and as tab-separated text (`.txt`). Every JSON file, the indexes and this document '
+                'included, has a `.sha` file beside it holding its SHA-1 checksum. The files take no '
+                'parameters. The checksums identify a build: a changed checksum means the file was rebuilt '
+                'from an updated module.'
             ),
             'contact': {'name': 'getBible', 'url': 'https://getbible.net'}
         },
@@ -410,11 +471,15 @@ def build_document(abbreviations, server_url, book_range):
     }
 
 
-# function to save the json file output
-def write_json(document_dict, output_file):
+# function to save the json file output, with its checksum beside it
+def write_json(document_dict, output_file, checksum_file):
     with open(output_file, 'w') as outfile:
         json.dump(document_dict, outfile, indent=2)
         outfile.write('\n')
+    with open(output_file, 'rb') as infile:
+        checksum = hashlib.sha1(infile.read()).hexdigest()
+    with open(checksum_file, 'w') as outfile:
+        outfile.write(checksum + '\n')
 
 
 # customary main function
@@ -428,7 +493,7 @@ def main():
         print('No translations.json found in {}; {} lists no translations.'.format(args.output_path, OPENAPI_FILE),
               file=sys.stderr)
     document_dict = build_document(abbreviations, server_url, book_number_range(args.conf_dir))
-    write_json(document_dict, os.path.join(args.output_path, OPENAPI_FILE))
+    write_json(document_dict, os.path.join(args.output_path, OPENAPI_FILE), os.path.join(args.output_path, OPENAPI_SHA_FILE))
     notice(100, 'Done building {} ({} translations)'.format(OPENAPI_FILE, len(abbreviations)))
     return 0
 

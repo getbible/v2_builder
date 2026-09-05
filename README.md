@@ -82,13 +82,15 @@ The complete static JSON tree, built from the Crosswire modules listed in the Bi
 - `{abbreviation}.json`: one file per translation, holding every book, chapter and verse together with the details of the source module.
 - `{abbreviation}/{book}.json`: one file per book of the translation.
 - `{abbreviation}/{book}/{chapter}.json`: one file per chapter of the book.
-- A `.sha` file beside each of these JSON files, holding its SHA-1 checksum.
-- `translations.json`, `books.json` and `chapters.json`: an index of what is available at that level, with the checksum of every file. `checksum.json` holds only the checksums. The same indexes are also written as tab-separated text files without an extension (`translations`, `books`, `chapters` and `checksum`).
-- `openapi.json`: an OpenAPI 3.1 document describing the tree above as an HTTP API. It is written into the root of the tree at the end of every build, from the finished tree, for the downstream deployment of this folder as an API endpoint. It is never used as input to the build, and the name `openapi` is reserved: it is never treated as a translation.
+- `translations.json`, `books.json` and `chapters.json`: an index of what is available at that level, with the checksum of every file. `checksum.json` holds only the checksums. The same indexes are also written as tab-separated text files: `translations.txt`, `books.txt`, `chapters.txt` and `checksum.txt`.
+- `openapi.json`: an OpenAPI 3.1 document describing the tree above as an HTTP API. It is written into the root of the tree at the end of every build, from the finished tree, for the downstream deployment of this folder as an API endpoint. It is never used as input to the build.
+- A `.sha` file beside every JSON file above, holding its SHA-1 checksum: the translation, book and chapter files, the indexes and `openapi.json`. The last step of every build walks the whole tree and creates or corrects any checksum that is missing or wrong, and removes any checksum whose JSON file is gone, so no JSON file is ever left without one.
+
+The names `translations`, `checksum`, `books`, `chapters` and `openapi` are reserved: they are never treated as a translation. A book that has no number in `conf/bookNumbers.json` is not part of the tree; the build reports it so that a number can be added.
 
 ### Hash folder (`v2`)
 
-The public companion of the scripture folder: every `.sha` file and every index listed above, but none of the translation, book or chapter JSON files, plus a copy of `openapi.json`. It can be published on its own so that a copy of the scripture files can be verified against the checksums of the latest build.
+The public companion of the scripture folder: every `.sha` file, every index (`.json` and `.txt`) and `openapi.json`, but none of the translation, book or chapter JSON files. It can be published on its own so that a copy of the scripture files can be verified against the checksums of the latest build.
 
 ## Let's be responsible!
 
@@ -204,6 +206,8 @@ You are able to change a few default behaviours in the getBible API builder
 ```
 
 ## Use GitHub Actions
+
+The workflows work on the `main` branch only. The full build runs once a month (and on request) and publishes to the official repositories; the test build runs on every pull request into `main` and every push to `main` (and on request) and publishes to the test repositories; the keep-active job commits to `main` once a week.
 
 If you wish to use GitHub Actions for automation, you'll need to set up several secrets in your fork of `v2_builder`. The details are listed below.
 

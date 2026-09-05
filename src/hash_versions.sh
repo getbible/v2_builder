@@ -37,10 +37,12 @@ if [ ! -d $target_folder ]; then
 	exit 1
 fi
 
+# remove the legacy index files without an extension (replaced by the .txt files)
+rm -f "${target_folder}/translations" "${target_folder}/checksum"
 # book names
-echo "#	language	translation	abbreviation	direction	filename	sha" >"${target_folder}/translations"
+echo "#	language	translation	abbreviation	direction	filename	sha" >"${target_folder}/translations.txt"
 # checksum
-echo "#	filename	sha" >"${target_folder}/checksum"
+echo "#	filename	sha" >"${target_folder}/checksum.txt"
 
 for filename in $target_folder/*.json; do
 	# get the abbreviation
@@ -73,7 +75,7 @@ for filename in $target_folder/*.json; do
 	translation=$(echo "${bible}" | jq '.translation' -r)
 	direction=$(echo "${bible}" | jq '.direction' -r)
 	# set file details to text file
-	echo "${nr}	${language}	${translation}	${abbreviation}	${direction}	${abbreviation}	${fileHash}" >>"${target_folder}/translations"
+	echo "${nr}	${language}	${translation}	${abbreviation}	${direction}	${abbreviation}	${fileHash}" >>"${target_folder}/translations.txt"
 	# load the values for json
 	jq_t_args+=(--arg "key$nr" "$abbreviation")
 	jq_t_args+=(--argjson "value$nr" "$bible")
@@ -82,7 +84,7 @@ for filename in $target_folder/*.json; do
 	# create/update the Bible file checksum
 	echo "${fileHash}" >"$hashFileName"
 	# echo "${fileHash}" > "$_hashFileName"
-	echo "${nr}	${abbreviation}	${fileHash}" >>"${target_folder}/checksum"
+	echo "${nr}	${abbreviation}	${fileHash}" >>"${target_folder}/checksum.txt"
 	# load the values for json
 	jq_args+=(--arg "key$nr" "$abbreviation")
 	jq_args+=(--arg "value$nr" "$fileHash")
@@ -103,3 +105,6 @@ done
 # run the generated command with jq
 jq "${jq_args[@]}" "$jq_query" <<<'{}' >"${target_folder}/checksum.json"
 jq "${jq_t_args[@]}" "$jq_t_query" <<<'{}' >"${target_folder}/translations.json"
+# create/update the index files checksum (every JSON file has a .sha sibling)
+sha1sum "${target_folder}/checksum.json" | awk '{print $1}' >"${target_folder}/checksum.sha"
+sha1sum "${target_folder}/translations.json" | awk '{print $1}' >"${target_folder}/translations.sha"
